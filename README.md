@@ -5,7 +5,7 @@ Download LeadBot from [here](https://github.com/LeadKiller/leadbot/archive/maste
 ### Commands/Convars
  - leadbot_add
  - leadbot_kick _[name/all]_
- - leadbot_strategy
+ - leadbot_strategy _[0/1]_
 ### Customization
 You can edit the autorun/leadbot.lua file to customize the names and skill. These will be replaced with a convar later.
 ### Issues
