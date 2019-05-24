@@ -60,7 +60,7 @@ end
 
 hook.Add("PlayerSpawn", "leadbot_spawn", function(ply)
 	timer.Simple(0.1, function()
-		if ply.LeadBot and ROUND.State ~= ROUND_WAITING then
+		if ply.LeadBot and ROUND.State ~= ROUND_ONGOING then
 			ply.LastGunPrice = 0
 			ply:SetNoCollideWithTeammates(true)
 			ply:SetAvoidPlayers(false)
@@ -87,7 +87,7 @@ end)
 function LeadBot.Think()
 	for _, bot in pairs(player.GetBots()) do
 		if bot.LeadBot then
-			if bot.LeadBot and !bot:Alive() and ROUND.State == ROUND_WAITING then bot:Spawn() end
+			if bot.LeadBot and !bot:Alive() and ROUND.State ~= ROUND_ONGOING then bot:Spawn() end
 			if IsValid(bot:GetActiveWeapon()) then
 				local wep = bot:GetActiveWeapon()
 				local ammoty = wep:GetPrimaryAmmoType() or wep.Primary.Ammo
