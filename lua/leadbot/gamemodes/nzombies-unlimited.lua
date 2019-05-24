@@ -9,18 +9,24 @@ LeadBot.Gamemode = "nzombies-unlimited"
 --[[GAMEMODE CONFIGURATION END]]--
 
 hook.Add("InitPostEntity", "nzbotInit", function()
-	if nzu then
+	if nzu and nzu.GetExtension("Core") then
 		ROUND = nzu.Round
 		SETTINGS = nzu.GetExtension("Core").Settings
+	elseif nzu and nzu.GetExtension("core") then
+		ROUND = nzu.Round
+		SETTINGS = nzu.GetExtension("core").Settings
 	end
 end)
 
-if nzu then
+if nzu and nzu.GetExtension("Core") then
 	ROUND = nzu.Round
 	SETTINGS = nzu.GetExtension("Core").Settings
+elseif nzu and nzu.GetExtension("core") then
+	ROUND = nzu.Round
+	SETTINGS = nzu.GetExtension("core").Settings
 end
 
-function LeadBot.FindClosest(bot)
+function LeadBot.FindClosest(bot) 
 	if bot.BotStrategy == 1 then
 		local zombies = ents.FindByClass("nzu_zombie")
 		local distancez = 9999

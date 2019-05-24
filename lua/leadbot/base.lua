@@ -1,4 +1,6 @@
 
+LeadBot.RespawnAllowed = true
+
 --[[ COMMANDS ]]--
 
 concommand.Add("leadbot_add", function(_, _, args) LeadBot.AddBot() end, nil, "Adds a LeadBot")
@@ -8,7 +10,7 @@ CreateConVar("leadbot_strategy", "1", {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Enables th
 --[[ FUNCTIONS ]]--
 
 function LeadBot.AddBot()
-	if !navmesh.IsLoaded() then
+	if !navmesh.IsLoaded() and engine.ActiveGamemode() ~= "nzombies-unlimited" then
 		MsgN("There is no navmesh! Generate one using \"nav_generate\"!")
 		return
 	end
@@ -102,7 +104,7 @@ end
 
 function LeadBot.PostPlayerDeath(bot)
 	timer.Simple(2, function()
-		if !bot:Alive() then
+		if LeadBot.RespawnAllowed and !bot:Alive() then
 			bot:Spawn()
 		end
 	end)
