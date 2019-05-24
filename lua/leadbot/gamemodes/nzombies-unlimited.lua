@@ -241,6 +241,10 @@ function LeadBot.StartCommand(bot, cmd)
 			curgoal = bot.LastPath[bot.CurSegment + 1] -- does this work? hell if I know!
 		end
 
+		if bot:GetIsDowned() then
+			cmd:SetForwardMove(0)
+		end
+
 		------------------------------
 		--------[[BOT EYES]]---------
 		------------------------------
