@@ -2,6 +2,9 @@
 ## :robot:Basic AI for the video game Garry's Mod:robot:  
 ### Installation
 Download LeadBot from [here](https://github.com/LeadKiller/leadbot/archive/master.zip), and drop leadbot-master into the addons folder.
+### Currently Supported Gamemodes:
+ - Sandbox
+ - [nZombies Unlimited](https://github.com/Zet0rz/nZombies-Unlimited)
 ### Commands/Convars
  - leadbot_add
  - leadbot_kick _[name/all]_
