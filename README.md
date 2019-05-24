@@ -5,6 +5,7 @@ Download LeadBot from [here](https://github.com/LeadKiller/leadbot/archive/maste
 ### Currently Supported Gamemodes:
  - Sandbox
  - [nZombies Unlimited](https://github.com/Zet0rz/nZombies-Unlimited)
+ - [Other Gamemodes](https://github.com/LeadKiller/leadbot/projects/1)
 ### Commands/Convars
  - leadbot_add
  - leadbot_kick _[name/all]_
