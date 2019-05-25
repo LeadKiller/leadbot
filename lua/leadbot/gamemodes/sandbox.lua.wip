@@ -1,0 +1,90 @@
+--[[GAMEMODE CONFIGURATION START]]--
+
+LeadBot.RespawnAllowed = true
+LeadBot.Gamemode = "sandbox"
+
+--[[GAMEMODE CONFIGURATION END]]--
+
+concommand.Add("leadbot_savedupe", function(ply)
+	local filen = "leadbot/dupe_" .. math.random(1, 99999999) .. ".txt"
+	file.CreateDir("leadbot")
+	file.Write(filen, util.TableToJSON(ply.CurrentDupe))
+	ply:ChatPrint("Dupe " .. filen .. " was saved!")
+end)
+
+concommand.Add("leadbot_convertmingebag", function(ply)
+	local filenn = table.Random(file.Find("e2files/mingebag_*.txt", "DATA"))
+	local filen = string.Split(file.Read("e2files/" .. filenn, "DATA"), "|")
+	local MingebagTimer = 0
+	local origin = ply:GetPos()
+
+	for k, v in pairs(filen) do
+		if string.find(v, "model") then
+			timer.Simple(MingebagTimer, function()
+				local model, pos, ang = v, util.StringToType(string.Replace(filen[k + 1], ",", " "), "vector"), util.StringToType(string.Replace(filen[k + 2], ",", " "), "angle")
+				local prop = ents.Create("prop_physics")
+				prop:SetModel(model)
+				prop:SetPos(origin + pos)
+				prop:SetAngles(ang)
+				prop:Spawn()
+				prop:Activate()
+				prop.Mingebagged = true
+
+				if !OriginMingebag then
+					OriginMingebag = prop
+				end
+
+				local physics = prop:GetPhysicsObject()
+
+				if IsValid(physics) then
+					physics:EnableMotion(false)
+				end
+			end)
+
+			MingebagTimer = MingebagTimer + tonumber("0." .. math.random(0, 499))
+		end
+	end
+
+	timer.Simple(MingebagTimer + 1, function()
+		for k, v in pairs(ents.FindByClass("prop_physics")) do
+			if v.Mingebagged then
+				constraint.Weld(OriginMingebag, v, 0, 0, 0, 0, true )
+			end
+		end
+	end)
+end)
+
+function LeadBot.StartCommand(bot, cmd)
+	cmd:ClearMovement()
+	cmd:ClearButtons()
+
+	if bot.ControllerBot:GetPos() ~= bot:GetPos() then
+		bot.ControllerBot:SetPos( bot:GetPos() )
+	end
+
+	bot.TargetEnt = nil
+	bot.LastBuildTime = bot.LastBuildTime or CurTime()
+
+	if bot.LastBuildTime < CurTime() then
+		local dupef = table.Random(file.Find("leadbot/dupe_*.txt", "DATA"))
+		local dupe = util.JSONToTable(file.Read("leadbot/" .. dupef, "DATA"))
+		PrintTable(dupe)
+
+		bot.LastBuildTime = CurTime() + 7
+
+		bot:SelectWeapon("gmod_tool")
+		timer.Simple(0.25, function()
+			bot:SetEyeAngles(LerpAngle(0.1, bot:EyeAngles(), (bot.ControllerBot:FindSpot("random", {radius = 10000, stepup = 10, stepdown = 10}) - bot:GetShootPos()):Angle()))
+			timer.Simple(0.75, function()
+				local trace = bot:GetEyeTrace()
+				bot:GetActiveWeapon():DoShootEffect(trace.HitPos, trace.HitNormal, trace.Entity, trace.PhysicsBone, IsFirstTimePredicted())
+				duplicator.SetLocalPos(Vector(trace.HitPos.x, trace.HitPos.y, trace.HitPos.z - dupe.Mins.z))
+				duplicator.SetLocalAng(Angle(0, bot:EyeAngles().y, 0))
+				duplicator.Paste(bot, dupe.Entities, dupe.Constraints)
+				timer.Simple(1, function()
+					bot:SelectWeapon("weapon_physgun")
+				end)
+			end)
+		end)
+	end
+end

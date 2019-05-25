@@ -1,5 +1,6 @@
 
 LeadBot.RespawnAllowed = true
+LeadBot.SetModel = true
 
 --[[ COMMANDS ]]--
 
@@ -27,8 +28,10 @@ function LeadBot.AddBot()
 		bot.BotModel = table.Random(player_manager.AllValidModels())
 	end
 
-	bot:SetModel(bot.BotModel)
-	bot:SetPlayerColor(bot.BotColor)
+	if LeadBot.SetModel then
+		bot:SetModel(bot.BotModel)
+		bot:SetPlayerColor(bot.BotColor)
+	end
 
 	bot.ControllerBot = ents.Create("leadbot_navigator")
 	bot.ControllerBot:Spawn()
