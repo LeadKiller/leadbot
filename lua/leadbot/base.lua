@@ -19,8 +19,11 @@ function LeadBot.AddBot()
 	local name = LeadBot.Prefix .. table.Random(LeadBot.Names)
 	local bot = player.CreateNextBot(name)
 
+	if !IsValid(bot) then ErrorNoHalt("[LeadBot] Player limit reached!\n") return end
+
 	bot.BotModel = player_manager.TranslatePlayerModel(table.Random(LeadBot.Models))
 	bot.BotColor = Vector(tonumber(0 .. "." .. math.random(0, 9999)), tonumber(0 .. "." .. math.random(0, 9999)), tonumber(0 .. "." .. math.random(0, 9999)))
+	bot.BotWColor = Vector(tonumber(0 .. "." .. math.random(0, 9999)), tonumber(0 .. "." .. math.random(0, 9999)), tonumber(0 .. "." .. math.random(0, 9999)))
 	bot.BotSkin = math.random(0, 1)
 	bot.LastSegmented = CurTime()
 
@@ -28,10 +31,19 @@ function LeadBot.AddBot()
 		bot.BotModel = table.Random(player_manager.AllValidModels())
 	end
 
+	if LeadBot.PlayerColor == "default" then
+		bot.BotColor = Vector(0.24, 0.34, 0.41)
+		bot.BotWColor = Vector(0.30, 1.80, 2.10)
+		bot.BotSkin = 0
+		bot.BotModel = "kleiner"
+	end
+
 	if LeadBot.SetModel then
 		bot:SetModel(bot.BotModel)
 		bot:SetPlayerColor(bot.BotColor)
 	end
+
+	bot:SetWeaponColor(bot.BotWColor)
 
 	bot.ControllerBot = ents.Create("leadbot_navigator")
 	bot.ControllerBot:Spawn()
@@ -46,6 +58,8 @@ function LeadBot.AddBot()
 	else
 		bot.BotStrategy = 0
 	end
+
+	MsgN("[LeadBot] Bot "..name.." with strategy "..bot.BotStrategy.." added!")
 end
 
 --[[ HOOKS ]]--
@@ -100,6 +114,7 @@ function LeadBot.PlayerSpawn(bot)
 		bot:SetModel(bot.BotModel)
 		bot:SetPlayerColor(bot.BotColor)
 		bot:SetSkin(bot.BotSkin)
+		bot:SetWeaponColor(bot.BotWColor)
 	end)
 end
 
@@ -147,8 +162,6 @@ function LeadBot.StartCommand(bot, cmd)
 
 	bot.TargetEnt = nil
 
-	local botWeapon = bot:GetActiveWeapon()
-
 	cmd:SetForwardMove(250)
 
 	------------------------------
@@ -190,7 +203,7 @@ function LeadBot.StartCommand(bot, cmd)
 
 	-- Half-Life 2 has a auto-reload system
 
-	if !IsValid(bot.TargetEnt) and (!bot.botPos or bot:GetPos():Distance(bot.botPos) < 60 or math.abs(Entity(2).LastSegmented - CurTime()) > 10) then
+	if !IsValid(bot.TargetEnt) and (!bot.botPos or bot:GetPos():Distance(bot.botPos) < 60 or math.abs(bot.LastSegmented - CurTime()) > 10) then
 		bot.botPos = bot.ControllerBot:FindSpot("random", {radius = 12500})
 		bot.LastSegmented = CurTime()
 	elseif IsValid(bot.TargetEnt) then
@@ -226,13 +239,13 @@ function LeadBot.StartCommand(bot, cmd)
 	------------------------------
 
 	if IsValid(bot.TargetEnt) and bot:GetEyeTrace().Entity ~= bot.TargetEnt then
-		local shouldvegoneforthehead = bot.TargetEnt:GetBonePosition(bot.TargetEnt:LookupBone("ValveBiped.Bip01_Head1")) or bot.TargetEnt:EyePos()
-		local group = math.random(0, bot.TargetEnt:GetHitBoxGroupCount()-1)
-		local bone = bot.TargetEnt:GetHitBoxBone(math.random(0, bot.TargetEnt:GetHitBoxCount(group)-1), group) or 0
+		local shouldvegoneforthehead = bot.TargetEnt:EyePos()
+		local group = math.random(0, bot.TargetEnt:GetHitBoxGroupCount() - 1)
+		local bone = bot.TargetEnt:GetHitBoxBone(math.random(0, bot.TargetEnt:GetHitBoxCount(group) - 1), group) or 0
 		shouldvegoneforthehead = bot.TargetEnt:GetBonePosition(bone)
 
-
-		bot:SetEyeAngles(LerpAngle(0.4, bot:EyeAngles(), (shouldvegoneforthehead - bot:GetShootPos()):Angle()))
+		bot:SetEyeAngles((shouldvegoneforthehead - bot:GetShootPos()):Angle())
+		return
 	elseif bot:GetPos():Distance(curgoal.pos) > 20 then
 		bot:SetEyeAngles(LerpAngle(0.4, bot:EyeAngles(), ((curgoal.pos + Vector(0, 0, 65)) - bot:GetShootPos()):Angle()))
 	end

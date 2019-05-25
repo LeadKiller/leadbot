@@ -9,6 +9,7 @@ LeadBot.Gamemode = "darkrp"
 function LeadBot.PlayerSpawn(bot)
 	timer.Simple(0, function()
 		bot:SetPlayerColor(bot.BotColor)
+		bot:SetWeaponColor(bot.BotWColor)	
 	end)
 end
 
