@@ -40,6 +40,20 @@ function ENT:OnKilled()
 	return false
 end
 
+function ENT:OnRemove()
+	if engine.ActiveGamemode() ~= "cinema" then
+		self:GetOwner():Kick("\"My nextbot was removed! :(\"")
+	end
+end
+
+function ENT:IsNPC()
+	return false
+end
+
+function ENT:Health()
+	return nil
+end
+
 function ENT:RunBehaviour()
 	while (true) do
 		if self.PosGen then
