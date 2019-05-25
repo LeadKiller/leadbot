@@ -7,6 +7,7 @@ Download LeadBot from [here](https://github.com/LeadKiller/leadbot/archive/maste
  - Sandbox
  - [nZombies Unlimited](https://github.com/Zet0rz/nZombies-Unlimited)
  - [Team Fortress 2 Gamemode](https://github.com/moddage/tf2-gamemode) (Integrated into the gamemode)
+ - [Cinema](https://steamcommunity.com/workshop/filedetails/?id=143148073)
  - [Other Gamemodes](https://github.com/LeadKiller/leadbot/projects/1)
 ### Commands/Convars
  - leadbot_add
