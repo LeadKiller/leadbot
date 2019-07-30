@@ -1,8 +1,6 @@
 
 LeadBot.RespawnAllowed = true
 LeadBot.SetModel = true
-LeadBot.TeamPlay = true
-LeadBot.LerpAim = true
 
 --[[ COMMANDS ]]--
 
@@ -18,8 +16,7 @@ function LeadBot.AddBot()
 		return
 	end
 
-	local generated = table.Random(LeadBot.Names) or "Bot"
-	local name = LeadBot.Prefix .. generated
+	local name = LeadBot.Prefix .. table.Random(LeadBot.Names)
 	local bot = player.CreateNextBot(name)
 
 	if !IsValid(bot) then ErrorNoHalt("[LeadBot] Player limit reached!\n") return end
@@ -62,7 +59,7 @@ function LeadBot.AddBot()
 		bot.BotStrategy = 0
 	end
 
-	MsgN("[LeadBot] Bot " .. name .. " with strategy " .. bot.BotStrategy .. " added!")
+	MsgN("[LeadBot] Bot "..name.." with strategy "..bot.BotStrategy.." added!")
 end
 
 --[[ HOOKS ]]--
@@ -114,9 +111,7 @@ end)
 
 function LeadBot.PlayerSpawn(bot)
 	timer.Simple(0, function()
-		if LeadBot.SetModel then
-			bot:SetModel(bot.BotModel)
-		end
+		bot:SetModel(bot.BotModel)
 		bot:SetPlayerColor(bot.BotColor)
 		bot:SetSkin(bot.BotSkin)
 		bot:SetWeaponColor(bot.BotWColor)
@@ -175,12 +170,10 @@ function LeadBot.StartCommand(bot, cmd)
 
 	for k, v in pairs(ents.GetAll()) do
 		if v:IsPlayer() and v ~= bot and v:GetPos():Distance(bot:GetPos()) < 1500 then
-			if (LeadBot.TeamPlay and (v:Team() ~= bot:Team() and bot:Team() ~= TEAM_UNASSIGNED) or bot:Team() == TEAM_UNASSIGNED) or !LeadBot.TeamPlay then -- TODO: find a better way to do this
-				local targetpos = v:EyePos() or v:GetPos()
+			local targetpos = v:EyePos() or v:GetPos()
 
-				if util.TraceLine({start = bot:GetShootPos(), endpos = targetpos, filter = function( ent ) return ent == v end}).Entity == v then -- TODO: stop using this shitty trace system, and look around for enemies in FOV!
-					bot.TargetEnt = v
-				end
+			if util.TraceLine({start = bot:GetShootPos(), endpos = targetpos, filter = function( ent ) return ent == v end}).Entity == v then
+				bot.TargetEnt = v
 			end
 		elseif v:GetClass() == "prop_door_rotating" and v:GetPos():Distance(bot:GetPos()) < 70 then
 			local targetpos = v:GetPos() + Vector(0, 0, 45)
@@ -245,12 +238,6 @@ function LeadBot.StartCommand(bot, cmd)
 	--------[[BOT EYES]]---------
 	------------------------------
 
-	local lerp = 0.4
-
-	if !LeadBot.LerpAim then
-		lerp = 0
-	end
-
 	if IsValid(bot.TargetEnt) and bot:GetEyeTrace().Entity ~= bot.TargetEnt then
 		local shouldvegoneforthehead = bot.TargetEnt:EyePos()
 		local group = math.random(0, bot.TargetEnt:GetHitBoxGroupCount() - 1)
@@ -260,6 +247,6 @@ function LeadBot.StartCommand(bot, cmd)
 		bot:SetEyeAngles((shouldvegoneforthehead - bot:GetShootPos()):Angle())
 		return
 	elseif bot:GetPos():Distance(curgoal.pos) > 20 then
-		bot:SetEyeAngles(LerpAngle(lerp, bot:EyeAngles(), ((curgoal.pos + Vector(0, 0, 65)) - bot:GetShootPos()):Angle()))
+		bot:SetEyeAngles(LerpAngle(0.4, bot:EyeAngles(), ((curgoal.pos + Vector(0, 0, 65)) - bot:GetShootPos()):Angle()))
 	end
 end
