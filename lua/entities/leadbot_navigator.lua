@@ -16,10 +16,14 @@ function ENT:ChasePos( options )
 	self.P:SetGoalTolerance(20)
 	self.P:Compute(self, self.PosGen)
 
+	if GetConVar("developer"):GetBool() then
+		self.P:Draw()
+	end
+
 	if !self.P:IsValid() then return end
 
 	while self.P:IsValid() do
-		if self.P:GetAge() > 0.3 then
+		if self.P:GetAge() > 1 and self.PosGen then
 			self.P:Compute(self, self.PosGen)
 		end
 
