@@ -1,9 +1,14 @@
 --[[GAMEMODE CONFIGURATION START]]--
 
 LeadBot.RespawnAllowed = true
+LeadBot.SetModel = true
 LeadBot.Gamemode = "sandbox"
+LeadBot.TeamPlay = false
+LeadBot.LerpAim = true
 
 --[[GAMEMODE CONFIGURATION END]]--
+
+if SERVER or CLIENT then return end
 
 concommand.Add("leadbot_savedupe", function(ply)
 	local filen = "leadbot/dupe_" .. math.random(1, 99999999) .. ".txt"
