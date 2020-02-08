@@ -1,4 +1,4 @@
-util.AddNetworkString("botLeadBot.VoicePresetStart")
+util.AddNetworkString("botVoiceStart")
 
 LeadBot.VoicePreset = {}
 LeadBot.VoicePreset["css"] = {}
@@ -17,12 +17,12 @@ LeadBot.VoicePreset["male"]["taunt"] = {"vo/coast/odessa/male01/nlo_cheer03.wav"
 
 LeadBot.VoicePreset["nick"] = {}
 LeadBot.VoicePreset["nick"]["join"] = {"player/survivor/voice/gambler/worldc5m5b04.wav", "player/survivor/voice/gambler/worldc5m5b04.wav", "player/survivor/voice/gambler/worldc5m505.wav"}
-LeadBot.VoicePreset["nick"]["wallbuy"] = {"player/survivor/LeadBot.VoicePreset/gambler/takemelee01.wav", "player/survivor/LeadBot.VoicePreset/gambler/takemelee05.wav", "player/survivor/LeadBot.VoicePreset/gambler/takemelee03.wav", "player/survivor/LeadBot.VoicePreset/gambler/takemelee06.wav", "player/survivor/LeadBot.VoicePreset/gambler/takefirstaid02.wav", "player/survivor/LeadBot.VoicePreset/gambler/takefirstaid01.wav"}
-LeadBot.VoicePreset["nick"]["taunt"] = {"player/survivor/LeadBot.VoicePreset/gambler/taunt01.wav", "player/survivor/LeadBot.VoicePreset/gambler/taunt02.wav", "player/survivor/LeadBot.VoicePreset/gambler/taunt03.wav", "player/survivor/LeadBot.VoicePreset/gambler/taunt04.wav", "player/survivor/LeadBot.VoicePreset/gambler/taunt05.wav", "player/survivor/LeadBot.VoicePreset/gambler/taunt06.wav", "player/survivor/LeadBot.VoicePreset/gambler/taunt07.wav", "player/survivor/LeadBot.VoicePreset/gambler/taunt08.wav", "player/survivor/LeadBot.VoicePreset/gambler/taunt09.wav", }
-LeadBot.VoicePreset["nick"]["help"] = {"player/survivor/LeadBot.VoicePreset/gambler/help01.wav", "player/survivor/LeadBot.VoicePreset/gambler/help02.wav", "player/survivor/LeadBot.VoicePreset/gambler/help03.wav", "player/survivor/LeadBot.VoicePreset/gambler/help04.wav", "player/survivor/LeadBot.VoicePreset/gambler/help05.wav"}
-LeadBot.VoicePreset["nick"]["downed"] = {"player/survivor/LeadBot.VoicePreset/gambler/ledgehangmiddle02.wav", "player/survivor/LeadBot.VoicePreset/gambler/ledgehangmiddle03.wav", "player/survivor/LeadBot.VoicePreset/gambler/ledgehangmiddle04.wav", "player/survivor/LeadBot.VoicePreset/gambler/ledgehangstart03.wav", "player/survivor/LeadBot.VoicePreset/gambler/ledgehangstart04.wav", "player/survivor/LeadBot.VoicePreset/gambler/ledgehangstart01.wav"}
+LeadBot.VoicePreset["nick"]["wallbuy"] = {"player/survivor/voice/gambler/takemelee01.wav", "player/survivor/voice/gambler/takemelee05.wav", "player/survivor/voice/gambler/takemelee03.wav", "player/survivor/voice/gambler/takemelee06.wav", "player/survivor/voice/gambler/takefirstaid02.wav", "player/survivor/voice/gambler/takefirstaid01.wav"}
+LeadBot.VoicePreset["nick"]["taunt"] = {"player/survivor/voice/gambler/taunt01.wav", "player/survivor/voice/gambler/taunt02.wav", "player/survivor/voice/gambler/taunt03.wav", "player/survivor/voice/gambler/taunt04.wav", "player/survivor/voice/gambler/taunt05.wav", "player/survivor/voice/gambler/taunt06.wav", "player/survivor/voice/gambler/taunt07.wav", "player/survivor/voice/gambler/taunt08.wav", "player/survivor/voice/gambler/taunt09.wav", }
+LeadBot.VoicePreset["nick"]["help"] = {"player/survivor/voice/gambler/help01.wav", "player/survivor/voice/gambler/help02.wav", "player/survivor/voice/gambler/help03.wav", "player/survivor/voice/gambler/help04.wav", "player/survivor/voice/gambler/help05.wav"}
+LeadBot.VoicePreset["nick"]["downed"] = {"player/survivor/voice/gambler/ledgehangmiddle02.wav", "player/survivor/voice/gambler/ledgehangmiddle03.wav", "player/survivor/voice/gambler/ledgehangmiddle04.wav", "player/survivor/voice/gambler/ledgehangstart03.wav", "player/survivor/voice/gambler/ledgehangstart04.wav", "player/survivor/voice/gambler/ledgehangstart01.wav"}
 
--- TODO: rest of survivors
+-- TODO: rest of survivors (ellis bill zoey etc)
 
 local convar = CreateConVar("leadbot_voice", "css", {FCVAR_ARCHIVE}, "Voice Preset.\nOptions are: \n- \"" .. table.concat(table.GetKeys(LeadBot.VoicePreset), "\"\n- \"") .. "\"")
 
@@ -38,7 +38,7 @@ function LeadBot.TalkToMe(ply, type)
     end
 
     for k, v in pairs(player.GetAll()) do
-        if hook.Call("PlayerCanHearPlayersLeadBot.VoicePreset", gmod.GetGamemode(), v, ply) then
+        if hook.Call("PlayerCanHearPlayersVoice", gmod.GetGamemode(), v, ply) then
             table.insert(hear, v)
         end
     end
@@ -47,7 +47,7 @@ function LeadBot.TalkToMe(ply, type)
         sound = table.Random(LeadBot.VoicePreset[selectedvoice][type])
     end
 
-    net.Start("botLeadBot.VoicePresetStart")
+    net.Start("botVoiceStart")
         net.WriteEntity(ply)
         net.WriteString(sound)
     net.Send(hear)
