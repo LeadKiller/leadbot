@@ -20,10 +20,17 @@ function LeadBot.StartCommand(bot, cmd)
 
     if !IsValid(car) then return end
 
-    local limit = 1000
+    local limit = 1250
 
-    if bot.UpsideDown then
-        limit = 800
+    if bot.BotStrategy == 0 then -- insane fast
+        limit = 1500
+        if bot.UpsideDown then
+            limit = 1250
+        end
+    else
+        if bot.UpsideDown then
+            limit = 1000
+        end
     end
 
     local toofast = car:GetVelocity():Length2D() > limit
