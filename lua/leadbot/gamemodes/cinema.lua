@@ -2,6 +2,7 @@
 
 LeadBot.RespawnAllowed = true
 LeadBot.Gamemode = "cinema"
+LeadBot.NoNavMesh = true
 
 --[[GAMEMODE CONFIGURATION END]]--
 

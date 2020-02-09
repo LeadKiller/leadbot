@@ -5,6 +5,7 @@ LeadBot.SetModel = true
 LeadBot.Gamemode = "nzombies-unlimited"
 LeadBot.TeamPlay = true
 LeadBot.LerpAim = false
+LeadBot.NoNavMesh = true
 
 --[[GAMEMODE CONFIGURATION END]]--
 local ROUND = {}

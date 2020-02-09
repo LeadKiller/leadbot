@@ -1,33 +1,41 @@
 LeadBot.RespawnAllowed = true
 LeadBot.SetModel = true
+LeadBot.NoNavMesh = false
 LeadBot.TeamPlay = false
 LeadBot.LerpAim = true
+LeadBot.AFKBotOverride = false
+LeadBot.SuicideAFK = false
 
 --[[ COMMANDS ]]--
 
-concommand.Add("leadbot_add", function(_, _, args) LeadBot.AddBot() end, nil, "Adds a LeadBot")
+concommand.Add("leadbot_add", function(_, _, args) local amount = 1 if tonumber(args[1]) then amount = tonumber(args[1]) end for i = 1, amount do LeadBot.AddBot() end end, nil, "Adds a LeadBot")
 concommand.Add("leadbot_kick", function(_, _, args) if args[1] ~= "all" then for k, v in pairs(player.GetAll()) do if string.find(v:GetName(), args[1]) then v:Kick() return end end else for k, v in pairs(player.GetBots()) do v:Kick() end end end, nil, "Kicks LeadBots (all is avaliable!)")
 CreateConVar("leadbot_strategy", "1", {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Enables the strategy system for newly created bots.")
-CreateConVar("leadbot_names", "", {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Bot names, seperated by commas.") -- legacy command?
+CreateConVar("leadbot_names", "", {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Bot names, seperated by commas.")
+CreateConVar("leadbot_name_prefix", "", {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Bot name prefix")
 
 --[[ FUNCTIONS ]]--
 
 function LeadBot.AddBot()
-    if !navmesh.IsLoaded() and !LeadBot.NoNavMesh[engine.ActiveGamemode()] then
+    if !navmesh.IsLoaded() and !LeadBot.NoNavMesh then
         ErrorNoHalt("There is no navmesh! Generate one using \"nav_generate\"!\n")
         return
     end
 
-    local generated = table.Random(LeadBot.Names) or "Bot"
+    if #player.GetAll() == game.MaxPlayers() then MsgN("[LeadBot] Player limit reached!") return end
+
+    local generated = "Leadbot #" .. #player.GetBots() + 1
 
     if GetConVar("leadbot_names"):GetString() ~= "" then
         generated = table.Random(string.Split(GetConVar("leadbot_names"):GetString(), ","))
     end
 
+    generated = GetConVar("leadbot_name_prefix"):GetString() .. generated
+
     local name = LeadBot.Prefix .. generated
     local bot = player.CreateNextBot(name)
 
-    if !IsValid(bot) then ErrorNoHalt("[LeadBot] Player limit reached!\n") return end
+    if !IsValid(bot) then MsgN("[LeadBot] Unable to create bot!") return end
 
     bot.BotModel = player_manager.TranslatePlayerModel(table.Random(LeadBot.Models))
     bot.BotColor = Vector(tonumber(0 .. "." .. math.random(0, 9999)), tonumber(0 .. "." .. math.random(0, 9999)), tonumber(0 .. "." .. math.random(0, 9999)))
@@ -61,16 +69,16 @@ function LeadBot.AddBot()
     bot.CurSegment = 2
     bot.LeadBot = true
 
-    -- TODO: Fake ping using MetaTables
-
     if GetConVar("leadbot_strategy"):GetBool() then
         bot.BotStrategy = math.random(0, 1)
     else
         bot.BotStrategy = 0
     end
 
+    LeadBot.AddBotOverride(bot)
+
     if math.random(2) == 1 then
-        timer.Simple(1, function()
+        timer.Simple(math.random(1, 4), function()
             LeadBot.TalkToMe(bot, "join")
         end)
     end
@@ -137,6 +145,9 @@ end)
 
 --[[ DEFAULT DM AI ]]--
 
+function LeadBot.AddBotOverride(bot)
+end
+
 function LeadBot.PlayerSpawn(bot)
     timer.Simple(0, function()
         if LeadBot.SetModel then
@@ -166,10 +177,16 @@ end
 
 function LeadBot.Think()
     for _, bot in pairs(player.GetBots()) do
-        if bot.LeadBot and IsValid(bot:GetActiveWeapon()) then
-            local wep = bot:GetActiveWeapon()
-            local ammoty = wep:GetPrimaryAmmoType() or wep.Primary.Ammo
-            bot:SetAmmo(999, ammoty)
+        if bot.LeadBot then
+            if IsValid(bot:GetActiveWeapon()) then
+                local wep = bot:GetActiveWeapon()
+                local ammoty = wep:GetPrimaryAmmoType() or wep.Primary.Ammo
+                bot:SetAmmo(999, ammoty)
+            end
+
+            --[[if !bot:Alive() and LeadBot.ForceRespawn then
+                bot:Spawn()
+            end]]
         end
     end
 end
@@ -294,7 +311,7 @@ function LeadBot.PlayerMove(bot, cmd, mv)
     ------------------------------
 
     local lerp = 0.4
-    local lerpc = 0.03
+    local lerpc = 0.08
 
     if !LeadBot.LerpAim then
         lerp = 1
