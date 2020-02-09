@@ -23,6 +23,9 @@ function LeadBot.PlayerSpawn(bot)
 end
 
 function LeadBot.StartCommand(bot, cmd)
+    if IsValid(bot.ControllerBot) then
+        bot.ControllerBot:Remove()
+    end
 end
 
 hook.Add("Think", "LeadBot_DFA", function()
