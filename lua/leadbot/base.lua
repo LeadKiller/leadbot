@@ -221,6 +221,8 @@ function LeadBot.StartCommand(bot, cmd)
         buttons = buttons + IN_ATTACK
     end
 
+    bot:SelectWeapon("weapon_smg1")
+
     cmd:ClearButtons()
     cmd:ClearMovement()
     cmd:SetButtons(buttons)
@@ -262,8 +264,6 @@ function LeadBot.PlayerMove(bot, cmd, mv)
     ------------------------------
     --------[[BOT LOGIC]]---------
     ------------------------------
-
-    bot:SelectWeapon("weapon_smg1")
 
     mv:SetForwardSpeed(1200)
 

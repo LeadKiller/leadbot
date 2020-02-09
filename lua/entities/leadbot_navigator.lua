@@ -6,32 +6,24 @@ ENT.Type = "nextbot"
 function ENT:Initialize()
 	self:SetModel("models/gman.mdl")
 	self:SetNoDraw(true)
-	self:SetSolid( SOLID_NONE )
+	self:SetSolid(SOLID_NONE)
 	self.PosGen = nil
 end
 
-function ENT:ChasePos( options )
+function ENT:ChasePos()
 	self.P = Path("Follow")
 	self.P:SetMinLookAheadDistance(10)
 	self.P:SetGoalTolerance(20)
 	self.P:Compute(self, self.PosGen)
 
-	if GetConVar("developer"):GetBool() then
-		self.P:Draw()
-	end
-
 	if !self.P:IsValid() then return end
 
 	while self.P:IsValid() do
-		if self.P:GetAge() > 1 and self.PosGen then
+		if self.PosGen then
 			self.P:Compute(self, self.PosGen)
 		end
 
-		if self.loco:IsStuck() then
-			self:HandleStuck()
-			return
-		end
-
+		coroutine.wait(1)
 		coroutine.yield()
 	end
 end
@@ -57,8 +49,6 @@ function ENT:RunBehaviour()
 		if self.PosGen then
 			self:ChasePos({})
 		end
-		--print("Recomputing...")
-		coroutine.wait(1)
 
 		coroutine.yield()
 	end
