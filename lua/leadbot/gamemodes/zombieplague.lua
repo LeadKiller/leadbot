@@ -1,5 +1,3 @@
--- this MUST support all classes (excluding crafter).
-
 LeadBot.RespawnAllowed = false
 LeadBot.SetModel = false
 LeadBot.Gamemode = "zombieplague"
@@ -74,99 +72,6 @@ function zombiecmd(bot, cmd)
     return buttons
 end
 
-function zombiemove(bot, cmd, mv)
-    bot.SeeTarget = false
-    if IsValid(bot.TargetEnt) then
-        bot.SeeTarget = util.TraceLine({start = bot:GetShootPos(), endpos = bot.TargetEnt:EyePos() - Vector(0, 0, 10), filter = function(ent) return ent == bot.TargetEnt end}).Entity == bot.TargetEnt
-    end
-
-    if !IsValid(bot.TargetEnt) then
-        for _, ply in pairs(player.GetAll()) do
-            if ply ~= bot --[[and ply:GetPos():DistToSqr(bot:GetPos()) < 2250000]] and ply:Team() ~= bot:Team() then
-                local targetpos = ply:EyePos() - Vector(0, 0, 10)
-                local trace = util.TraceLine({start = bot:GetShootPos(), endpos = targetpos, filter = function(ent) return ent == ply end})
-
-                if trace.Entity == ply then
-                    bot.TargetEnt = ply
-                end
-            end
-        end
-    elseif !bot.TargetEnt:Alive() or bot.TargetEnt:Team() == bot:Team() or bot.Forget < CurTime() and !bot.SeeTarget then
-        bot.TargetEnt = nil
-    elseif bot.Forget < CurTime() then
-        bot.Forget = CurTime() + 3
-    end
-
-    mv:SetForwardSpeed(1200)
-
-    if !IsValid(bot.TargetEnt) and (!bot.botPos or bot:GetPos():DistToSqr(bot.botPos) < 25000 --[[3600]] or math.abs(bot.LastSegmented - CurTime()) > 10) then
-        bot.botPos = bot.ControllerBot:FindSpot("random", {radius = 22500})
-        bot.LastSegmented = CurTime()
-    elseif IsValid(bot.TargetEnt) then
-        local distance = bot.TargetEnt:GetPos():DistToSqr(bot:GetPos())
-        bot.botPos = bot.TargetEnt:GetPos()
-
-        if distance <= 2000 then
-            mv:SetForwardSpeed(-1200)
-        end
-    end
-
-    bot.ControllerBot.PosGen = bot.botPos
-
-    if !bot.ControllerBot.P then
-        return
-    end
-
-    local segments = bot.ControllerBot.P:GetAllSegments()
-
-    if !segments then return end
-
-    local curgoal = segments[2]
-
-    if !curgoal then return end
-
-    if segments[3] and segments[3].pos.z > bot:GetPos().z + 6 and bot.NextJump < CurTime() then
-        bot.NextJump = 0
-    end
-
-    local cur_segment = 1
-
-    -- think 15 steps ahead!
-    for i, segment in pairs(segments) do
-        if bot:VisibleVec(segment.pos) and i > cur_segment then
-            cur_segment = i
-        end
-    end
-
-    curgoal = segments[cur_segment]
-
-    local lerp = 3
-    local lerpc = 2
-
-    if !LeadBot.LerpAim then
-        lerp = 100
-        lerpc = 100
-    end
-
-    local mva = ((curgoal.pos + Vector(0, 0, 65)) - bot:GetShootPos()):Angle()
-
-    mv:SetMoveAngles(LerpAngle(FrameTime() * 65, mv:GetMoveAngles(), mva))
-
-    if IsValid(bot.TargetEnt) and bot:GetEyeTrace().Entity ~= bot.TargetEnt then
-        local shouldvegoneforthehead = bot.TargetEnt:EyePos()
-        local group = math.random(0, bot.TargetEnt:GetHitBoxGroupCount() - 1)
-        local bone = bot.TargetEnt:GetHitBoxBone(math.random(0, bot.TargetEnt:GetHitBoxCount(group) - 1), group) or 0
-        shouldvegoneforthehead = bot.TargetEnt:GetBonePosition(bone)
-        bot:SetEyeAngles(LerpAngle(FrameTime() * lerp, bot:EyeAngles(), (shouldvegoneforthehead - bot:GetShootPos()):Angle() + Angle(-8, 0, 0))) --[[+ bot:GetViewPunchAngles()]]
-    elseif bot:GetPos():DistToSqr(curgoal.pos) > 400 then
-        bot:SetEyeAngles(LerpAngle(FrameTime() * lerpc, bot:EyeAngles(), mva))
-    end
-
-    local eyea = bot:EyeAngles()
-
-    bot:SetEyeAngles(Angle(eyea.p, eyea.y, 0))
-end
-
 function humancmd(bot, cmd)
     local buttons = IN_SPEED
 
@@ -181,49 +86,8 @@ function humancmd(bot, cmd)
     return buttons
 end
 
-function humanmove(bot, cmd, mv)
-    bot.SeeTarget = false
-    if IsValid(bot.TargetEnt) then
-        bot.SeeTarget = util.TraceLine({start = bot:GetShootPos(), endpos = bot.TargetEnt:EyePos() - Vector(0, 0, 10), filter = function(ent) return ent == bot.TargetEnt end}).Entity == bot.TargetEnt
-    end
-
-    if !IsValid(bot.TargetEnt) then
-        for _, ply in pairs(player.GetAll()) do
-            if ply ~= bot --[[and ply:GetPos():DistToSqr(bot:GetPos()) < 2250000]] and ply:Team() ~= bot:Team() then
-                local targetpos = ply:EyePos() - Vector(0, 0, 10)
-                local trace = util.TraceLine({start = bot:GetShootPos(), endpos = targetpos, filter = function(ent) return ent == ply end})
-
-                if trace.Entity == ply then
-                    bot.TargetEnt = ply
-                end
-            end
-        end
-    elseif !bot.TargetEnt:Alive() or bot.TargetEnt:Team() == bot:Team() or bot.Forget < CurTime() and !bot.SeeTarget then
-        bot.TargetEnt = nil
-    elseif bot.Forget < CurTime() then
-        bot.Forget = CurTime() + 3
-    end
-
-    local dt = util.QuickTrace(bot:EyePos(), bot:GetForward() * 45, bot)
-
-    if IsValid(dt.Entity) and dt.Entity:GetClass() == "prop_door_rotating" then
-        dt.Entity:Fire("Open","",0)
-    end
-
+local function navigate(bot, cmd, mv, goal, segments)
     mv:SetForwardSpeed(1200)
-
-    if !IsValid(bot.TargetEnt) and (!bot.botPos or bot:GetPos():DistToSqr(bot.botPos) < 25000 --[[3600]] or math.abs(bot.LastSegmented - CurTime()) > 10) then
-        bot.botPos = bot.ControllerBot:FindSpot("random", {radius = 22500})
-        bot.LastSegmented = CurTime()
-    elseif IsValid(bot.TargetEnt) then
-        local distance = bot.TargetEnt:GetPos():DistToSqr(bot:GetPos())
-        bot.botPos = bot.TargetEnt:GetPos()
-
-        if distance <= 160000 then
-            bot.botPos = bot.ControllerBot:FindSpot("random", {radius = 22500})
-        end
-    end
-
     bot.ControllerBot.PosGen = bot.botPos
 
     if !bot.ControllerBot.P then
@@ -301,4 +165,64 @@ function humanmove(bot, cmd, mv)
     local eyea = bot:EyeAngles()
 
     bot:SetEyeAngles(Angle(eyea.p, eyea.y, 0))
+end
+
+local function doorai(bot)
+    local dt = util.QuickTrace(bot:EyePos(), bot:GetForward() * 45, bot)
+
+    if IsValid(dt.Entity) and dt.Entity:GetClass() == "prop_door_rotating" then
+        dt.Entity:Fire("Open","",0)
+    end
+end
+
+local function targetai(bot)
+    bot.SeeTarget = false
+    if IsValid(bot.TargetEnt) then
+        bot.SeeTarget = util.TraceLine({start = bot:GetShootPos(), endpos = bot.TargetEnt:EyePos() - Vector(0, 0, 10), filter = function(ent) return ent == bot.TargetEnt end}).Entity == bot.TargetEnt
+    end
+
+    if !IsValid(bot.TargetEnt) then
+        for _, ply in pairs(player.GetAll()) do
+            if ply ~= bot --[[and ply:GetPos():DistToSqr(bot:GetPos()) < 2250000]] and ply:Team() ~= bot:Team() then
+                local targetpos = ply:EyePos() - Vector(0, 0, 10)
+                local trace = util.TraceLine({start = bot:GetShootPos(), endpos = targetpos, filter = function(ent) return ent == ply end})
+
+                if trace.Entity == ply then
+                    bot.TargetEnt = ply
+                end
+            end
+        end
+    elseif !bot.TargetEnt:Alive() or bot.TargetEnt:Team() == bot:Team() or bot.Forget < CurTime() and !bot.SeeTarget then
+        bot.TargetEnt = nil
+    elseif bot.Forget < CurTime() then
+        bot.Forget = CurTime() + 3
+    end
+end
+
+local function movementai(bot, cmd, mv)
+    if !IsValid(bot.TargetEnt) and (!bot.botPos or bot:GetPos():DistToSqr(bot.botPos) < 25000 --[[3600]] or math.abs(bot.LastSegmented - CurTime()) > 10) then
+        bot.botPos = bot.ControllerBot:FindSpot("random", {radius = 22500})
+        bot.LastSegmented = CurTime()
+    elseif IsValid(bot.TargetEnt) then
+        local distance = bot.TargetEnt:GetPos():DistToSqr(bot:GetPos())
+        bot.botPos = bot.TargetEnt:GetPos()
+
+        if (bot:Team() == TEAM_ZOMBIES and distance <= 2000) or distance <= 160000 then
+            mv:SetForwardSpeed(-1200)
+        end
+    end
+end
+
+function zombiemove(bot, cmd, mv)
+    targetai(bot)
+    doorai(bot)
+    movementai(bot, cmd, mv)
+    navigate(bot, cmd, mv)
+end
+
+function humanmove(bot, cmd, mv)
+    targetai(bot)
+    doorai(bot)
+    movementai(bot, cmd, mv)
+    navigate(bot, cmd, mv)
 end
