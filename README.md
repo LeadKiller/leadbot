@@ -1,5 +1,5 @@
 ![LeadBot](https://repository-images.githubusercontent.com/188332969/93320b00-7d8a-11e9-95ab-8ec570917423)
-## :robot:Basic Player AI Bots to replace players in Garry's Mod:robot:
+## :robot:Player AI Bots to revive obscure gamemodes in Garry's Mod:robot:
 #### Current State: Alpha
 ### Installation
 Download LeadBot from [here](https://github.com/LeadKiller/leadbot/archive/master.zip), and drop leadbot-master into the addons folder.
@@ -7,11 +7,14 @@ Download LeadBot from [here](https://github.com/LeadKiller/leadbot/archive/maste
  - Sandbox
  - [nZombies Unlimited](https://github.com/Zet0rz/nZombies-Unlimited)
  - [Stop it, Slender!](https://steamcommunity.com/sharedfiles/filedetails/?id=171728689)
+ - [DOGFIGHT: Arcade Assault](https://steamcommunity.com/sharedfiles/filedetails/?id=288399121)
+ - [Hover Gear Legacy](https://steamcommunity.com/sharedfiles/filedetails/?id=104516229)
+ - [Zombie Plague](https://github.com/Nicholas-Fuchs/zombieplague)
  - [Team Fortress 2 Gamemode](https://github.com/moddage/tf2-gamemode) (Integrated into the gamemode)
  - [Cinema](https://steamcommunity.com/workshop/filedetails/?id=143148073)
  - [Quake 3](https://steamcommunity.com/sharedfiles/filedetails/?id=160207505)
+ - [Slayer](https://steamcommunity.com/sharedfiles/filedetails/?id=1336605119)
  - [DarkRP](https://github.com/FPtje/darkrp)
- - [DOGFIGHT: Arcade Assault](https://steamcommunity.com/sharedfiles/filedetails/?id=288399121)
  - [Other Gamemodes](https://github.com/LeadKiller/leadbot/projects/1)
 ### Commands/Convars
  - leadbot_add [1-128]
