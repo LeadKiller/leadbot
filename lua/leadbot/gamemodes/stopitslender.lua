@@ -12,7 +12,6 @@ function LeadBot.PlayerSpawn(bot)
     bot.LHP = bot:Health()
     bot.Caution = CurTime() + 30
     bot.LastChat = CurTime()
-
     if math.random(4) == 1 then
         timer.Simple(math.random(1, 3), function()
             if IsValid(bot) then
@@ -26,6 +25,10 @@ function LeadBot.Think()
 end
 
 function LeadBot.StartCommand(bot, cmd)
+    bot.LHP = bot.LHP or bot:Health()
+    bot.Caution = bot.Caution or CurTime() + 30
+    bot.LastChat = bot.LastChat or CurTime()
+
     if !bot:Alive() then return end
 
     local buttons = IN_SPEED
@@ -145,7 +148,7 @@ function humenai(bot, cmd, mv)
         return
     end
 
-    if Vector(bot:GetPos().x, bot:GetPos().y, 0):DistToSqr(Vector(curgoal.pos.x, curgoal.pos.y)) < 100 then
+    if segments[cur_segment + 1] and Vector(bot:GetPos().x, bot:GetPos().y, 0):DistToSqr(Vector(curgoal.pos.x, curgoal.pos.y)) < 100 then
         controller.cur_segment = controller.cur_segment + 1
         curgoal = segments[controller.cur_segment]
     end
@@ -158,6 +161,9 @@ function humenai(bot, cmd, mv)
         return
     elseif bot:GetPos():Distance(curgoal.pos) > 20 then
         local ang = LerpAngle(FrameTime() * 8, bot:EyeAngles(), mva)
+        if bot.SNB then
+            ang = LerpAngle(FrameTime() * 3, bot:EyeAngles(), (bot:EyePos() - ghost:GetPos()):Angle()) -- (bot:EyePos() - slender:GetPos()):Angle() + Angle(0, 180, 0)
+        end
         bot:SetEyeAngles(Angle(ang.p, ang.y, 0))
     end
 end

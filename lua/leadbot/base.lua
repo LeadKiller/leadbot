@@ -144,7 +144,7 @@ end
 function LeadBot.Think()
     for _, bot in pairs(player.GetBots()) do
         if bot:IsLBot() then
-            if LeadBot.RespawnAllowed and !bot:Alive() and bot.NextSpawnTime < CurTime() then
+            if LeadBot.RespawnAllowed and bot.NextSpawnTime and !bot:Alive() and bot.NextSpawnTime < CurTime() then
                 bot:Spawn()
                 return
             end
@@ -219,7 +219,7 @@ function LeadBot.PlayerMove(bot, cmd, mv)
     -- losing about 4-25 fps with this
     -- for now, using player.GetAll() rather than ents.GetAll()
     -- having no npc support is bad, but I think most people will use this for dm
-    if bot.NextSpawnTime + 1 > CurTime() or !IsValid(controller.Target) or controller.ForgetTarget < CurTime() or controller.Target:Health() < 1 then
+    if (bot.NextSpawnTime and bot.NextSpawnTime + 1 > CurTime()) or !IsValid(controller.Target) or controller.ForgetTarget < CurTime() or controller.Target:Health() < 1 then
         controller.Target = nil
     end
 
@@ -282,19 +282,17 @@ function LeadBot.PlayerMove(bot, cmd, mv)
         return
     end
 
-    -- jump
-    if controller.NextJump ~= 0 and curgoal.pos.z > (bot:GetPos().z + 16) and controller.NextJump < CurTime() then
-        controller.NextJump = 0
-    end
-
     -- think every step of the way!
     -- TODO: corner turning like nextbot npcs
-    if Vector(bot:GetPos().x, bot:GetPos().y, 0):DistToSqr(Vector(curgoal.pos.x, curgoal.pos.y)) < 100 then
+    if segments[cur_segment + 1] and Vector(bot:GetPos().x, bot:GetPos().y, 0):DistToSqr(Vector(curgoal.pos.x, curgoal.pos.y)) < 100 then
         controller.cur_segment = controller.cur_segment + 1
         curgoal = segments[controller.cur_segment]
     end
 
-    if !curgoal then return end
+    -- jump
+    if controller.NextJump ~= 0 and curgoal.pos.z > (bot:GetPos().z + 16) and controller.NextJump < CurTime() then
+        controller.NextJump = 0
+    end
 
     if GetConVar("developer"):GetBool() then
         controller.P:Draw()
