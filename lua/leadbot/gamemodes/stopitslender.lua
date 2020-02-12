@@ -12,7 +12,6 @@ function LeadBot.PlayerSpawn(bot)
     bot.LHP = bot:Health()
     bot.Caution = CurTime() + 30
     bot.LastChat = CurTime()
-    -- bot.NextJump = CurTime()
 
     if math.random(4) == 1 then
         timer.Simple(math.random(1, 3), function()
@@ -21,15 +20,6 @@ function LeadBot.PlayerSpawn(bot)
             end
         end)
     end
-
-    timer.Simple(0, function()
-        if LeadBot.SetModel then
-            bot:SetModel(bot.BotModel)
-        end
-        bot:SetPlayerColor(bot.BotColor)
-        bot:SetSkin(bot.BotSkin)
-        bot:SetWeaponColor(bot.BotWColor)
-    end)
 end
 
 function LeadBot.Think()
@@ -39,17 +29,6 @@ function LeadBot.StartCommand(bot, cmd)
     if !bot:Alive() then return end
 
     local buttons = IN_SPEED
-
-    --[[if bot.SNB then
-        buttons = 0
-    end]]
-    -- run when they're near!
-
-    --[[if bot.NextJump == 0 then
-        bot.NextJump = CurTime() + 1
-        buttons = buttons + IN_JUMP -- + IN_DUCK
-    end]]
-
     local wep = bot:GetActiveWeapon()
 
     if ((!bot.SNB and !wep:GetSwitch()) or (bot.SNB and wep:GetSwitch())) and math.random(2) == 1 then
@@ -72,33 +51,39 @@ function LeadBot.PlayerMove(bot, cmd, mv)
         humenai(bot, cmd, mv)
     elseif bot:Team() == TEAM_SLENDER then
         bot:SetTeam(TEAM_SPECTATOR)
-        timer.Simple(3,function()
-            gamemode.Call("CheckSlenderman")
+        timer.Simple(3, function()
+            hook.Call("CheckSlenderman", gmod.GetGamemode())
         end)
     end
 end
 
 hook.Add("PlayerUse", "Leadbot_StopItSlender!", function(bot, ent)
-    if bot:IsBot() and math.random(3) == 1 and ent:GetClass() == "page" and bot.LastChat < CurTime() then
+    if ent:GetClass() == "page" and bot:IsLBot() and math.random(3) == 1 and bot.LastChat < CurTime() then
         LeadBot.TalkToMe(bot, "taunt")
         bot.LastChat = CurTime() + 1
     end
 end)
 
 function humenai(bot, cmd, mv)
-    if bot.ControllerBot:GetPos() ~= bot:GetPos() then
-        bot.ControllerBot:SetPos(bot:GetPos())
+    local controller = bot.ControllerBot
+
+    if !IsValid(controller) then
+        bot.ControllerBot = ents.Create("leadbot_navigator")
+        bot.ControllerBot:Spawn()
+        bot.ControllerBot:SetOwner(bot)
+        controller = bot.ControllerBot
     end
 
-    bot.FollowPly = table.Random(player.GetHumans())
-    bot.UseEnt = nil
+    if controller:GetPos() ~= bot:GetPos() then
+        controller:SetPos(bot:GetPos())
+    end
 
     local ghost = ents.FindByClass("slendy")[1] or team.GetPlayers(TEAM_SLENDER)[1]
     local ghostDis = 99999
     local ghostvis = false
 
     if IsValid(ghost) then
-        ghostDis = bot:GetPos():Distance(ghost:GetPos())
+        ghostDis = bot:GetPos():DistToSqr(ghost:GetPos())
         ghostvis = (ghost:GetClass() == "slendy" or ghost:IsSlenderVisible())
     end
 
@@ -119,17 +104,13 @@ function humenai(bot, cmd, mv)
         end
     end
 
-    bot.SNB = ghostDis < 650 and ghostvis and bot.Caution > CurTime() -- and util.QuickTrace(bot:EyePos(), ghost:EyePos() - bot:EyePos(), bot).Entity == ghost
-
-    -- antistuck test?
-
-    --cmd:SetForwardMove(250)
+    bot.SNB = ghostDis < 422500 and ghostvis and bot.Caution > CurTime()
 
     -- pages
     -- todo: skill system, some players know where pages exactly are (pretty unfun tho)
     if !IsValid(bot.TPage) then
         for _, page in pairs(ents.FindByClass("page")) do
-            if !table.HasValue(page.Players, bot) and util.QuickTrace(bot:EyePos(), page:GetPos() - bot:EyePos(), bot).HitPos == page:GetPos() and page:GetPos():Distance(bot:GetPos()) <= 5012 then
+            if !table.HasValue(page.Players, bot) and util.QuickTrace(bot:EyePos(), page:GetPos() - bot:EyePos(), bot).HitPos == page:GetPos() and page:GetPos():DistToSqr(bot:GetPos()) <= 25120144 then
                 bot.TPage = page
             end
         end
@@ -141,64 +122,42 @@ function humenai(bot, cmd, mv)
     -- todo: don't search in places with prev pages
     mv:SetForwardSpeed(1200)
 
-    if (!bot.SNB and !IsValid(bot.TPage)) and !IsValid(bot.UseEnt) and (!isvector(bot.botPos) or bot:GetPos():Distance(bot.botPos) < 60 or math.abs(bot.LastSegmented - CurTime()) > 10) then
-        bot.botPos = bot.ControllerBot:FindSpot("random", {radius = 12500})
-        bot.LastSegmented = CurTime()
+    if (!bot.SNB and !IsValid(bot.TPage)) and (!controller.PosGen or bot:GetPos():DistToSqr(controller.PosGen) < 1000 or controller.LastSegmented < CurTime()) then
+        controller.PosGen = controller:FindSpot("random", {radius = 12500})
+        controller.LastSegmented = CurTime() + 10
     elseif IsValid(bot.TPage) then
-        bot.botPos = bot.TPage:GetPos()
+        controller.PosGen = bot.TPage:GetPos()
     end
 
-    bot.ControllerBot.PosGen = bot.botPos
-
-    if bot.ControllerBot.P then
-        bot.LastPath = bot.ControllerBot.P:GetAllSegments()
-    end
-
-    if !bot.ControllerBot.P then
+    if !controller.P then
         return
     end
 
-    if bot.CurSegment ~= 2 and !table.EqualValues( bot.LastPath, bot.ControllerBot.P:GetAllSegments() ) then
-        bot.CurSegment = 2
+    local segments = controller.P:GetAllSegments()
+
+    if !segments then return end
+
+    local cur_segment = controller.cur_segment
+    local curgoal = segments[cur_segment]
+
+    if !curgoal then
+        mv:SetForwardSpeed(0)
+        return
     end
 
-    if !bot.LastPath then return end
-    local curgoal = bot.LastPath[bot.CurSegment]
-    if !curgoal then return end
-
-    --[[if bot.LastPath[bot.CurSegment + 1] and bot.LastPath[bot.CurSegment + 1].pos.z > bot:GetPos().z + 6 and bot.NextJump < CurTime() then
-        bot.NextJump = 0
-    end]]
-
-    if bot:GetPos():Distance(curgoal.pos) < 50 and bot.LastPath[bot.CurSegment + 1] then
-        curgoal = bot.LastPath[bot.CurSegment + 1]
+    if Vector(bot:GetPos().x, bot:GetPos().y, 0):DistToSqr(Vector(curgoal.pos.x, curgoal.pos.y)) < 100 then
+        controller.cur_segment = controller.cur_segment + 1
+        curgoal = segments[controller.cur_segment]
     end
 
-    -- eyes 👀
-
-    local lerp = 0.1
-
-    mv:SetMoveAngles(LerpAngle(lerp, mv:GetMoveAngles(), ((curgoal.pos + Vector(0, 0, 65)) - bot:GetShootPos()):Angle()))
+    local mva = ((curgoal.pos + bot:GetViewOffset()) - bot:GetShootPos()):Angle()
+    mv:SetMoveAngles(mva)
 
     if IsValid(bot.TPage) and bot:GetEyeTrace().Entity ~= bot.TPage then
-        local shouldvegoneforthehead = bot.TPage:GetPos()
-        local cang = --[[LerpAngle(lerp, bot:EyeAngles(), ]](shouldvegoneforthehead - bot:GetShootPos()):Angle() --)
-        bot:SetEyeAngles(Angle(cang.p, cang.y, 0)) --[[+ bot:GetViewPunchAngles()]]
+        bot:SetEyeAngles((bot.TPage:GetPos() - bot:GetShootPos()):Angle()) --[[+ bot:GetViewPunchAngles()]]
         return
     elseif bot:GetPos():Distance(curgoal.pos) > 20 then
-        local ang2 = ((curgoal.pos + Vector(0, 0, 65)) - bot:GetShootPos()):Angle()
-        local ang = LerpAngle(lerp, mv:GetMoveAngles(), ang2)
-        local tang = ang
-        if bot.SNB then --bot.Caution > CurTime() and ghostvis and ghost:GetPos():Distance(bot:GetPos()) < 1000 then
-            tang = LerpAngle(0.025, bot:EyeAngles(), (bot:EyePos() - ghost:GetPos()):Angle()) -- (bot:EyePos() - slender:GetPos()):Angle() + Angle(0, 180, 0)
-        end
-
-        --[[if (string.StartWith(tang.y, "-") and -math.abs(bot:EyeAngles().y))then
-        print("spinning", tang.y -
-        end]]
-
-        --local cang = LerpAngle(lerpc, bot:EyeAngles(), ang2)
-        bot:SetEyeAngles(tang) --Angle(ang2.p, ang2.y, 0))
-        mv:SetMoveAngles(ang)
+        local ang = LerpAngle(FrameTime() * 8, bot:EyeAngles(), mva)
+        bot:SetEyeAngles(Angle(ang.p, ang.y, 0))
     end
 end

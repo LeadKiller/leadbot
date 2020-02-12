@@ -29,7 +29,7 @@ end)
 function LeadBot.Botize(ply, togg)
     if togg == nil then togg = !ply.LeadBot end
 
-    if ((!togg and ply.LeadBot) or (togg and !ply.LeadBot)) and LeadBot.SuicideAFK and ply:Alive() then
+    if ((!togg and ply:IsLBot()) or (togg and !ply:IsLBot())) and LeadBot.SuicideAFK and ply:Alive() then
         ply:Kill()
     end
 
@@ -60,7 +60,7 @@ function LeadBot.Botize(ply, togg)
 end
 
 function meta:IsBot()
-    if self.LeadBot and LeadBot.AFKBotOverride then
+    if self:IsLBot() and LeadBot.AFKBotOverride then
         return true
     else
         return oldFunc(self)

@@ -61,6 +61,7 @@ end
 function driveCar(bot, cmd, mv)
     if !IsValid(bot:GetHoverGear()) then return end
 
+    local controller = bot.ControllerBot
     local car = bot:GetHoverGear()
 
     -- keep the bot always on edge, and drifting
@@ -68,8 +69,8 @@ function driveCar(bot, cmd, mv)
 
     local floor = util.QuickTrace(bot:GetPos(), Vector(0, 0, -1024), {car, bot}).HitPos
 
-    if bot.ControllerBot:GetPos() ~= floor then
-        bot.ControllerBot:SetPos(floor)
+    if controller:GetPos() ~= floor then
+        controller:SetPos(floor)
     end
 
     local ourcheckpoint = nil
@@ -81,27 +82,30 @@ function driveCar(bot, cmd, mv)
         ourcheckpoint = GAMEMODE.Checkpoints[1]
     end
 
-    bot.ControllerBot.PosGen = ourcheckpoint
+    controller.PosGen = ourcheckpoint
 
-    if !bot.ControllerBot.P then
+    if !controller.P then
         return
     end
 
-    local segments = bot.ControllerBot.P:GetAllSegments()
+    local segments = controller.P:GetAllSegments()
 
     if !segments then return end
 
-    local curgoal = segments[2]
+    local cur_segment = controller.cur_segment or 2
+    local curgoal = segments[cur_segment]
 
-    if !curgoal then return end
+    if !curgoal then
+        return
+    end
 
-    local cur_segment = 2
     local ep = car:GetPos() + car:GetUp() * 8 + car:GetForward() * 2
 
-    -- think 15 steps ahead!
+    -- decided to use the old system for this, the bot will go for last segment they see rather than every segment
     for i, segment in pairs(segments) do
         if i < 15 and util.QuickTrace(ep, segment.pos - ep, {bot, car}).HitPos == segment.pos and i > cur_segment then
-            cur_segment = i
+            controller.cur_segment = i
+            curgoal = segments[i]
         end
     end
 
@@ -116,11 +120,10 @@ function driveCar(bot, cmd, mv)
 
     -- camera for afk players, no need for bots since spectating isn't a thing
     if !bot:IsBot() then
-        bot:SetEyeAngles(LerpAngle(0.1, bot:EyeAngles(), (curgoal.pos - bot:EyePos()):Angle()))
+        bot:SetEyeAngles(LerpAngle(FrameTime() * 8, bot:EyeAngles(), (curgoal.pos - bot:EyePos()):Angle()))
     end
 
     local carangtrue = car:GetAngles()
-
     local carang = Angle(0, car:GetAngles().y, 0)
 
     if (string.StartWith(carangtrue.r, "-") and carangtrue.r < -45) or (carangtrue.r > 45) then

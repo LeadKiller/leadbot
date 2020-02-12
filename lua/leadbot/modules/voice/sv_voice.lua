@@ -27,7 +27,7 @@ LeadBot.VoicePreset["nick"]["downed"] = {"player/survivor/voice/gambler/ledgehan
 local convar = CreateConVar("leadbot_voice", "css", {FCVAR_ARCHIVE}, "Voice Preset.\nOptions are: \n- \"" .. table.concat(table.GetKeys(LeadBot.VoicePreset), "\"\n- \"") .. "\"")
 
 function LeadBot.TalkToMe(ply, type)
-    if !ply:IsBot() then return end
+    if !ply:IsLBot(true) then return end
 
     local hear = {}
     local sound = ""

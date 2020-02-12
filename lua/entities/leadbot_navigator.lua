@@ -8,6 +8,11 @@ function ENT:Initialize()
 	self:SetNoDraw(true)
 	self:SetSolid(SOLID_NONE)
 	self.PosGen = nil
+	self.NextJump = CurTime()
+	self.cur_segment = 2
+	self.Target = nil
+	self.LastSegmented = CurTime()
+	self.ForgetTarget = CurTime()
 end
 
 function ENT:ChasePos()
@@ -21,6 +26,7 @@ function ENT:ChasePos()
 	while self.P:IsValid() do
 		if self.PosGen then
 			self.P:Compute(self, self.PosGen)
+			self.cur_segment = 2
 		end
 
 		coroutine.wait(1)
