@@ -156,13 +156,13 @@ function humenai(bot, cmd, mv)
     local mva = ((curgoal.pos + bot:GetViewOffset()) - bot:GetShootPos()):Angle()
     mv:SetMoveAngles(mva)
 
-    if IsValid(bot.TPage) and bot:GetEyeTrace().Entity ~= bot.TPage then
+    if IsValid(bot.TPage) then
         bot:SetEyeAngles((bot.TPage:GetPos() - bot:GetShootPos()):Angle()) --[[+ bot:GetViewPunchAngles()]]
         return
-    elseif bot:GetPos():Distance(curgoal.pos) > 20 then
+    else
         local ang = LerpAngle(FrameTime() * 8, bot:EyeAngles(), mva)
         if bot.SNB then
-            ang = LerpAngle(FrameTime() * 3, bot:EyeAngles(), (bot:EyePos() - ghost:GetPos()):Angle()) -- (bot:EyePos() - slender:GetPos()):Angle() + Angle(0, 180, 0)
+            ang = LerpAngle(FrameTime() * 5, bot:EyeAngles(), (bot:EyePos() - ghost:GetPos()):Angle()) -- (bot:EyePos() - slender:GetPos()):Angle() + Angle(0, 180, 0)
         end
         bot:SetEyeAngles(Angle(ang.p, ang.y, 0))
     end
