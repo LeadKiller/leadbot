@@ -110,7 +110,7 @@ hook.Add("PostPlayerDeath", "LeadBot_Death", function(bot)
 end)
 
 hook.Add("PlayerHurt", "LeadBot_Death", function(ply, bot, hp, dmg)
-    if bot:IsLBot() then
+    if IsValid(bot) and bot:IsPlayer() and bot:IsLBot() then
         LeadBot.PlayerHurt(ply, bot, hp, dmg)
     end
 end)
