@@ -54,8 +54,13 @@ function LeadBot.Botize(ply, togg)
         ply.LastSegmented = CurTime()
         ply.CurSegment = 2
         if GetConVar("leadbot_strategy"):GetBool() then
-            ply.BotStrategy = math.random(0, 1)
+            ply.BotStrategy = math.random(0, LeadBot.Strategies)
         end
+        ply.LeadBot_Config = {}
+        ply.LeadBot_Config[1] = ply.BotModel
+        ply.LeadBot_Config[2] = ply.BotColor
+        ply.LeadBot_Config[3] = ply.BotWColor
+        ply.LeadBot_Config[4] = ply.BotStrategy
     end
 end
 

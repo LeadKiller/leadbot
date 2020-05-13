@@ -9,8 +9,8 @@ LeadBot.Strategies = 1 -- how many strategies can the bot pick from
 
 --[[ COMMANDS ]]--
 
-concommand.Add("leadbot_add", function(_, _, args) local amount = 1 if tonumber(args[1]) then amount = tonumber(args[1]) end for i = 1, amount do LeadBot.AddBot() end end, nil, "Adds a LeadBot")
-concommand.Add("leadbot_kick", function(_, _, args) if args[1] ~= "all" then for k, v in pairs(player.GetAll()) do if string.find(v:GetName(), args[1]) then v:Kick() return end end else for k, v in pairs(player.GetBots()) do v:Kick() end end end, nil, "Kicks LeadBots (all is avaliable!)")
+concommand.Add("leadbot_add", function(ply, _, args) if !ply:IsSuperAdmin() then return end local amount = 1 if tonumber(args[1]) then amount = tonumber(args[1]) end for i = 1, amount do LeadBot.AddBot() end end, nil, "Adds a LeadBot")
+concommand.Add("leadbot_kick", function(ply, _, args) if !args[1] or !ply:IsSuperAdmin() then return end if args[1] ~= "all" then for k, v in pairs(player.GetBots()) do if string.find(v:GetName(), args[1]) then v:Kick() return end end else for k, v in pairs(player.GetBots()) do v:Kick() end end end, nil, "Kicks LeadBots (all is avaliable!)")
 CreateConVar("leadbot_strategy", "1", {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Enables the strategy system for newly created bots.")
 CreateConVar("leadbot_names", "", {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Bot names, seperated by commas.")
 CreateConVar("leadbot_models", "", {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Bot models, seperated by commas.")
@@ -82,48 +82,6 @@ function LeadBot.AddBot()
     LeadBot.AddBotControllerOverride(bot, bot.ControllerBot)
     MsgN("[LeadBot] Bot " .. name .. " with strategy " .. bot.BotStrategy .. " added!")
 end
-
---[[ HOOKS ]]--
-
-hook.Add("PlayerDisconnected", "LeadBot_Disconnect", function(bot)
-    if IsValid(bot.ControllerBot) then
-        bot.ControllerBot:Remove()
-    end
-end)
-
-hook.Add("SetupMove", "LeadBot_Control", function(bot, mv, cmd)
-    if bot:IsLBot() then
-        LeadBot.PlayerMove(bot, cmd, mv)
-    end
-end)
-
-hook.Add("StartCommand", "LeadBot_Control", function(bot, cmd)
-    if bot:IsLBot() then
-        LeadBot.StartCommand(bot, cmd)
-    end
-end)
-
-hook.Add("PostPlayerDeath", "LeadBot_Death", function(bot)
-    if bot:IsLBot() then
-        LeadBot.PostPlayerDeath(bot)
-    end
-end)
-
-hook.Add("PlayerHurt", "LeadBot_Death", function(ply, bot, hp, dmg)
-    if IsValid(bot) and bot:IsPlayer() and bot:IsLBot() then
-        LeadBot.PlayerHurt(ply, bot, hp, dmg)
-    end
-end)
-
-hook.Add("Think", "LeadBot_Think", function()
-    LeadBot.Think()
-end)
-
-hook.Add("PlayerSpawn", "LeadBot_Spawn", function(bot)
-    if bot:IsLBot() then
-        LeadBot.PlayerSpawn(bot)
-    end
-end)
 
 --[[ DEFAULT DM AI ]]--
 
@@ -210,6 +168,12 @@ function LeadBot.PlayerMove(bot, cmd, mv)
         controller = bot.ControllerBot
     end
 
+    -- force a recompute
+    if controller.PosGen and controller.P and controller.TPos ~= controller.PosGen then
+        controller.TPos = controller.PosGen
+        controller.P:Compute(controller, controller.PosGen)
+    end
+
     if controller:GetPos() ~= bot:GetPos() then
         controller:SetPos(bot:GetPos())
     end
@@ -224,7 +188,7 @@ function LeadBot.PlayerMove(bot, cmd, mv)
     end
 
     if !IsValid(controller.Target) then
-        for _, ply in pairs(player.GetAll()) do
+        for _, ply in ipairs(player.GetAll()) do
             if ply ~= bot and ((ply:IsPlayer() and (!LeadBot.TeamPlay or (LeadBot.TeamPlay and (ply:Team() ~= bot:Team())))) or ply:IsNPC()) and ply:GetPos():DistToSqr(bot:GetPos()) < 2250000 then
                 local targetpos = ply:EyePos() - Vector(0, 0, 10)
                 local trace = util.TraceLine({
@@ -319,6 +283,48 @@ function LeadBot.PlayerMove(bot, cmd, mv)
         bot:SetEyeAngles(Angle(ang.p, ang.y, 0))
     end
 end
+
+--[[ HOOKS ]]--
+
+hook.Add("PlayerDisconnected", "LeadBot_Disconnect", function(bot)
+    if IsValid(bot.ControllerBot) then
+        bot.ControllerBot:Remove()
+    end
+end)
+
+hook.Add("SetupMove", "LeadBot_Control", function(bot, mv, cmd)
+    if bot:IsLBot() then
+        LeadBot.PlayerMove(bot, cmd, mv)
+    end
+end)
+
+hook.Add("StartCommand", "LeadBot_Control", function(bot, cmd)
+    if bot:IsLBot() then
+        LeadBot.StartCommand(bot, cmd)
+    end
+end)
+
+hook.Add("PostPlayerDeath", "LeadBot_Death", function(bot)
+    if bot:IsLBot() then
+        LeadBot.PostPlayerDeath(bot)
+    end
+end)
+
+hook.Add("PlayerHurt", "LeadBot_Death", function(ply, bot, hp, dmg)
+    if IsValid(bot) and bot:IsPlayer() and bot:IsLBot() then
+        LeadBot.PlayerHurt(ply, bot, hp, dmg)
+    end
+end)
+
+hook.Add("Think", "LeadBot_Think", function()
+    LeadBot.Think()
+end)
+
+hook.Add("PlayerSpawn", "LeadBot_Spawn", function(bot)
+    if bot:IsLBot() then
+        LeadBot.PlayerSpawn(bot)
+    end
+end)
 
 --[[ META ]]--
 
