@@ -281,7 +281,6 @@ function LeadBot.PlayerMove(bot, cmd, mv)
                 controller.PuntPos = redgravgun
                 controller.LastPunt = CurTime() + 1
                 -- controller.TargetRes2 = nil
-                print("f")
             end
         end
     end
