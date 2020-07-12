@@ -30,6 +30,12 @@ function LeadBot.AddBotOverride(bot)
             bot:SetTeam(TEAM_BLUE)
         end
     end
+
+    -- gamemode spawns us asap for some reason, let's try to override this and "pick our loadout"
+    bot:KillSilent()
+    bot:SetDeaths(0)
+    bot:SetTeamColor()
+    bot.NextSpawnTime = CurTime() + math.random(4, 8)
 end
 
 function LeadBot.PlayerSpawn(bot)
@@ -67,6 +73,29 @@ function LeadBot.PlayerSpawn(bot)
     end
 
     build.OnSet(bot)
+
+    -- hats
+    local hats = {}
+    local miscs = {}
+    local hats_equip = {}
+
+    for hatname, hat in pairs(Equipment) do
+        if hat.slot then
+            if hat.slot == "hat" then
+                table.insert(hats, hatname)
+            else
+                table.insert(miscs, hatname)
+            end
+        end
+    end
+
+    hats_equip[1] = table.Random(hats)
+
+    for i = 2, 4 do
+        hats_equip[i] = table.Random(miscs)
+    end
+
+    ApplyEquipment(bot, _, hats_equip)
 end
 
 local gametype
