@@ -144,6 +144,12 @@ end
 local gametype
 local door_enabled
 
+cvars.AddChangeCallback("dd_gametype", function(_, _, game)
+    if gametype then
+        gametype = game
+    end
+end)
+
 function LeadBot.Think()
     if !gametype then
         LeadBot.TeamPlay = GAMEMODE:GetGametype() ~= "ffa"
