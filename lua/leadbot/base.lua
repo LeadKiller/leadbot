@@ -121,7 +121,7 @@ function LeadBot.PostPlayerDeath(bot)
 end
 
 function LeadBot.PlayerHurt(ply, bot, hp, dmg)
-    if hp < 1 and math.random(2) == 1 then
+    if hp <= dmg and math.random(3) == 1 then
         LeadBot.TalkToMe(bot, "taunt")
     end
 

@@ -38,6 +38,30 @@ function LeadBot.AddBotOverride(bot)
     bot.NextSpawnTime = CurTime() + math.random(4, 8)
 end
 
+local function botTalk(bot, cmd)
+    if !bot:Alive() then return end
+    if !VoiceAdvanced[bot:GetVoiceSet()].Commands[cmd] then return end
+
+    bot.NextCommand = bot.NextCommand or 0
+
+    if bot.NextCommand >= CurTime() then return end
+
+    bot.NextCommand = CurTime() + 7
+    bot:PlaySpeech(VoiceAdvanced[bot:GetVoiceSet()].Commands[cmd])
+end
+
+function LeadBot.PlayerHurt(ply, bot, hp, dmg)
+    if hp <= dmg and math.random(4) == 1 then
+        -- LeadBot.TalkToMe(bot, "taunt")
+        botTalk(bot, "taunt")
+    end
+
+    local controller = ply:GetController()
+
+    controller.LookAtTime = CurTime() + 2
+    controller.LookAt = ((bot:GetPos() + VectorRand() * 128) - ply:GetPos()):Angle()
+end
+
 function LeadBot.PlayerSpawn(bot)
     if !bot:IsBot() then return end
 
