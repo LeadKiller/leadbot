@@ -14,7 +14,6 @@ Download LeadBot from [here](https://github.com/LeadKiller/leadbot/archive/maste
  - [Cinema](https://steamcommunity.com/workshop/filedetails/?id=143148073)
  - [Quake 3](https://steamcommunity.com/sharedfiles/filedetails/?id=160207505)
  - [Slayer](https://steamcommunity.com/sharedfiles/filedetails/?id=1336605119)
- - [DarkRP](https://github.com/FPtje/darkrp)
  - [Other Gamemodes](https://github.com/LeadKiller/leadbot/projects/1)
 ### Commands/Convars
  - leadbot_add [1-128]
@@ -26,5 +25,6 @@ Download LeadBot from [here](https://github.com/LeadKiller/leadbot/archive/maste
  - leadbot_name_prefix _[prefix]_
  - leadbot_names _[name1,name2]_
  - leadbot_voice _[voiceset]_
+ - leadbot_fov _[75-100]_
 ### Issues
 You can submit issues on the [LsD Discord](https://discord.gg/Mv3ebbx) or through [issues](https://github.com/LeadKiller/leadbot/issues)
