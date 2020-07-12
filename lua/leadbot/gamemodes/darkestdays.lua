@@ -39,6 +39,8 @@ function LeadBot.AddBotOverride(bot)
 end
 
 function LeadBot.PlayerSpawn(bot)
+    if !bot:IsBot() then return end
+
     local primaries = {}
     local secondaries = {}
     local _, spell1 = table.Random(Spells)
@@ -75,27 +77,44 @@ function LeadBot.PlayerSpawn(bot)
     build.OnSet(bot)
 
     -- hats
-    local hats = {}
-    local miscs = {}
-    local hats_equip = {}
+    if !bot.Suit then
+        local hats = {}
+        local miscs = {}
+        local hats_equip = {}
 
-    for hatname, hat in pairs(Equipment) do
-        if hat.slot then
-            if hat.slot == "hat" then
-                table.insert(hats, hatname)
-            else
-                table.insert(miscs, hatname)
+        for hatname, hat in pairs(Equipment) do
+            if hat.slot then
+                if hat.slot == "hat" then
+                    table.insert(hats, hatname)
+                else
+                    table.insert(miscs, hatname)
+                end
             end
         end
+
+        hats_equip[1] = table.Random(hats)
+
+        for i = 2, 4 do
+            hats_equip[i] = table.Random(miscs)
+        end
+
+        bot.Suit = hats_equip
     end
 
-    hats_equip[1] = table.Random(hats)
+    ApplyEquipment(bot, _, bot.Suit)
 
-    for i = 2, 4 do
-        hats_equip[i] = table.Random(miscs)
-    end
+    timer.Simple(0, function()
+        if IsValid(bot) then
+            local model = string.lower(player_manager.TranslatePlayerModel(bot:LBGetModel()))
+            if table.HasValue(GAMEMODE.ModelBlacklist, model) then
+                model = "models/player/kleiner.mdl"
+            end
 
-    ApplyEquipment(bot, _, hats_equip)
+            bot:SetModel(model)
+            bot:SetDTString(0, model)
+            bot:SetVoiceSet(VoiceSetTranslate[model] or "male")
+        end
+    end)
 end
 
 local gametype
