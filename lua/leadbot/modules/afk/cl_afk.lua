@@ -6,41 +6,61 @@ hook.Add("HUDPaint", "AFKT", function()
     end
 end)
 
--- local tp = false
--- local NA = Angle(0, 0, 0)
+local tp = false
+local last_TP = false
+local NA = Angle(0, 0, 0)
 local lastsend = CurTime()
 
 hook.Add("CreateMove", "LeadBot_AFK", function(cmd)
-    if LocalPlayer():GetNWBool("LeadBot_AFK") then
+    local ply = LocalPlayer()
+
+    if ply:GetNWBool("LeadBot_AFK") then
         if lastsend < CurTime() and cmd:KeyDown(IN_JUMP) or cmd:KeyDown(IN_FORWARD) then
             net.Start("LeadBot_AFK_Off")
             net.SendToServer()
             lastsend = CurTime() + 5
         end
 
+        if cmd:KeyDown(IN_ATTACK) and engine.ActiveGamemode() == "sandbox" then
+            if !last_TP then
+                tp = !tp
+                last_TP = true
+            end
+        else
+            last_TP = false
+        end
+
+        if tp then
+            local s = GetConVar("m_pitch"):GetFloat()
+            NA.pitch = math.Clamp(NA.pitch + cmd:GetMouseY() * s, -90, 90)
+            NA.yaw = NA.yaw - cmd:GetMouseX() * s
+        end
+
         cmd:ClearButtons()
         cmd:ClearMovement()
-    end
 
-    --[[if LocalPlayer():KeyReleased(IN_ATTACK) then
-        -- tp = !tp
+        cmd:SetMouseX(0)
+        cmd:SetMouseY(0)
     end
+end)
 
-    if tp then
-        local s = GetConVar("m_pitch"):GetFloat()
-        NA.pitch = math.Clamp(NA.pitch + cmd:GetMouseY() * s, -90, 90)
-        NA.yaw = NA.yaw - cmd:GetMouseX() * s
-    end]]
+hook.Add("InputMouseApply", "LeadBot_AFK", function(cmd)
+    if LocalPlayer():GetNWBool("LeadBot_AFK") then
+        cmd:SetMouseX(0)
+        cmd:SetMouseY(0)
+        return true
+    end
 end)
 
 -- looked pretty bad :(
 
---[[local ang
+local pos
+local ang
 
 hook.Add("CalcView", "LeadBot_AFK", function(ply, origin, angles)
     if !ang then ang = angles end
 
-    if !LocalPlayer():GetNWBool("LeadBot_AFK") then return end
+    if ply:ShouldDrawLocalPlayer() or !ply:GetNWBool("LeadBot_AFK") then return end
 
     local view = {}
 
@@ -57,7 +77,7 @@ hook.Add("CalcView", "LeadBot_AFK", function(ply, origin, angles)
         view.origin = trace.HitPos
         view.drawviewer = true
     else
-        ang = LerpAngle(0.2, ang, angles)
+        ang = LerpAngle(FrameTime() * 8, ang, angles)
         ang = Angle(ang.p, ang.y, 0)
         NA = ang
         view.angles = ang
@@ -67,6 +87,17 @@ hook.Add("CalcView", "LeadBot_AFK", function(ply, origin, angles)
 end)
 
 hook.Add("CalcViewModelView", "LeadBot_AFK", function(wep, vm, oldpos, oldang, newpos, newang)
-    if !LocalPlayer():GetNWBool("LeadBot_AFK") then return end
-    return oldpos, ang
-end)]]
+    local ply = LocalPlayer()
+
+    if ply:ShouldDrawLocalPlayer() or !ply:GetNWBool("LeadBot_AFK") then return end
+
+    if wep.GetViewModelPosition then
+        newpos, newang = wep:GetViewModelPosition(newpos, newang)
+    end
+
+    if wep.CalcViewModelView then
+        newpos, newang = wep:CalcViewModelView(vm, oldpos, oldang, newpos, newang)
+    end
+
+    return newpos, ang
+end)
