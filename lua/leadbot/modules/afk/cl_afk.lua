@@ -54,7 +54,6 @@ end)
 
 -- looked pretty bad :(
 
-local pos
 local ang
 
 hook.Add("CalcView", "LeadBot_AFK", function(ply, origin, angles)
