@@ -69,12 +69,12 @@ function LeadBot.PlayerSpawn(bot)
     build.OnSet(bot)
 end
 
-local assigned = false
+local gametype
 
 function LeadBot.Think()
-    if !assigned then
+    if !gametype then
         LeadBot.TeamPlay = GAMEMODE:GetGametype() ~= "ffa"
-        assigned = true
+        gametype = GAMEMODE:GetGametype()
     end
 
     for _, bot in pairs(player.GetAll()) do
@@ -124,9 +124,9 @@ function LeadBot.StartCommand(bot, cmd)
             buttons = buttons + IN_RELOAD
         end
 
-        if IsValid(target) and math.random(2) == 1 then
+        if IsValid(target) and (math.random(2) == 1 or botWeapon:GetClass() == "dd_striker") then
             bot:SwitchSpell()
-            buttons = buttons + IN_ATTACK + ((bot:Team() ~= TEAM_THUG and IN_ATTACK2) or 0)
+            buttons = buttons + IN_ATTACK + ((!bot:IsThug() and IN_ATTACK2) or 0)
             if math.random((botWeapon.Base == "dd_meleebase" and 6) or 16) == 1 then
                 buttons = buttons + IN_USE
             end
@@ -183,7 +183,7 @@ function LeadBot.PlayerMove(bot, cmd, mv)
 
     mv:SetForwardSpeed(1200)
 
-    local zombies = GAMEMODE:GetGametype() == "ts"
+    local zombies = gametype == "ts"
 
     if (!zombies or zombies and bot:Team() ~= TEAM_THUG) and ((bot.NextSpawnTime and bot.NextSpawnTime + 1 > CurTime()) or !IsValid(controller.Target) or controller.ForgetTarget < CurTime() or !controller.Target:Alive()) then
         controller.Target = nil
