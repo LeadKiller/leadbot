@@ -7,7 +7,7 @@ function ENT:Initialize()
 	if CLIENT then return end
 
 	self:SetModel("models/player.mdl")
-	self:SetNoDraw(GetConVar("developer"):GetBool())
+	self:SetNoDraw(!GetConVar("developer"):GetBool())
 	self:SetSolid(SOLID_NONE)
 
 	local fov_convar = GetConVar("leadbot_fov")
