@@ -222,9 +222,15 @@ function LeadBot.PlayerMove(bot, cmd, mv)
     -- controller.MovingBack = false
 
     if !IsValid(controller.Target) and (!controller.PosGen or bot:GetPos():DistToSqr(controller.PosGen) < 1000 or controller.LastSegmented < CurTime()) then
-        -- find a random spot on the map, and in 10 seconds do it again!
-        controller.PosGen = controller:FindSpot("random", {radius = 12500})
-        controller.LastSegmented = CurTime() + 10
+        if gametype == "koth" then
+            local rand = VectorRand() * (ents.FindByClass("koth_point")[1]:GetRadius() - 4)
+            controller.PosGen = ents.FindByClass("koth_point")[1]:GetPos() + Vector(rand.x, rand.y, 0)
+            controller.LastSegmented = CurTime() + math.random(3, 6)
+        else
+            -- find a random spot on the map, and in 10 seconds do it again!
+            controller.PosGen = controller:FindSpot("random", {radius = 12500})
+            controller.LastSegmented = CurTime() + 10
+        end
     elseif IsValid(controller.Target) then
         -- move to our target
         local distance = controller.Target:GetPos():DistToSqr(bot:GetPos())
