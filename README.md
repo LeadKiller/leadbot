@@ -6,6 +6,7 @@ Download LeadBot from [here](https://github.com/LeadKiller/leadbot/archive/maste
 ### Currently Supported Gamemodes:
  - Sandbox
  - [nZombies Unlimited](https://github.com/Zet0rz/nZombies-Unlimited)
+ - [Darkest Days](https://steamcommunity.com/sharedfiles/filedetails/?id=823262022)
  - [Stop it, Slender!](https://steamcommunity.com/sharedfiles/filedetails/?id=171728689)
  - [DOGFIGHT: Arcade Assault](https://steamcommunity.com/sharedfiles/filedetails/?id=288399121)
  - [Hover Gear Legacy](https://steamcommunity.com/sharedfiles/filedetails/?id=104516229)
