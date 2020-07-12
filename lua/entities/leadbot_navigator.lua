@@ -4,15 +4,24 @@ ENT.Base = "base_nextbot"
 ENT.Type = "nextbot"
 
 function ENT:Initialize()
-	self:SetModel("models/gman.mdl")
-	self:SetNoDraw(true)
+	if CLIENT then return end
+
+	self:SetModel("models/player.mdl")
+	self:SetNoDraw(GetConVar("developer"):GetBool())
 	self:SetSolid(SOLID_NONE)
+
+	local fov_convar = GetConVar("leadbot_fov")
+
+	self:SetFOV((fov_convar:GetBool() and math.Clamp(fov_convar:GetInt(), 75, 100)) or 90)
 	self.PosGen = nil
 	self.NextJump = CurTime()
 	self.cur_segment = 2
 	self.Target = nil
 	self.LastSegmented = CurTime()
 	self.ForgetTarget = CurTime()
+	self.NextCenter = CurTime()
+	self.LookAt = Angle(0, 0, 0)
+	self.LookAtTime = CurTime()
 end
 
 function ENT:ChasePos()

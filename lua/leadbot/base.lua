@@ -15,6 +15,7 @@ CreateConVar("leadbot_strategy", "1", {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Enables th
 CreateConVar("leadbot_names", "", {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Bot names, seperated by commas.")
 CreateConVar("leadbot_models", "", {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Bot models, seperated by commas.")
 CreateConVar("leadbot_name_prefix", "", {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Bot name prefix")
+CreateConVar("leadbot_fov", "0", {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "LeadBot FOV\nSet to 0 to use the preset FOV.")
 
 --[[ FUNCTIONS ]]--
 
@@ -123,6 +124,11 @@ function LeadBot.PlayerHurt(ply, bot, hp, dmg)
     if hp < 1 and math.random(2) == 1 then
         LeadBot.TalkToMe(bot, "taunt")
     end
+
+    local controller = ply:GetController()
+
+    controller.LookAtTime = CurTime() + 2
+    controller.LookAt = ((bot:GetPos() + VectorRand() * 128) - ply:GetPos()):Angle()
 end
 
 function LeadBot.StartCommand(bot, cmd)
@@ -152,7 +158,7 @@ function LeadBot.StartCommand(bot, cmd)
         buttons = buttons + IN_DUCK
     end
 
-    bot:SelectWeapon("weapon_smg1")
+    bot:SelectWeapon((IsValid(controller.Target) and controller.Target:GetPos():DistToSqr(controller:GetPos()) < 129000 and "weapon_shotgun") or "weapon_smg1")
     cmd:ClearButtons()
     cmd:ClearMovement()
     cmd:SetButtons(buttons)
@@ -168,6 +174,9 @@ function LeadBot.PlayerMove(bot, cmd, mv)
         controller = bot.ControllerBot
     end
 
+    --[[local min, max = controller:GetModelBounds()
+    debugoverlay.Box(controller:GetPos(), min, max, 0.1, Color(255, 0, 0, 0), true)]]
+
     -- force a recompute
     if controller.PosGen and controller.P and controller.TPos ~= controller.PosGen then
         controller.TPos = controller.PosGen
@@ -176,6 +185,10 @@ function LeadBot.PlayerMove(bot, cmd, mv)
 
     if controller:GetPos() ~= bot:GetPos() then
         controller:SetPos(bot:GetPos())
+    end
+
+    if controller:GetAngles() ~= bot:EyeAngles() then
+        controller:SetAngles(bot:EyeAngles())
     end
 
     mv:SetForwardSpeed(1200)
@@ -190,14 +203,14 @@ function LeadBot.PlayerMove(bot, cmd, mv)
     if !IsValid(controller.Target) then
         for _, ply in ipairs(player.GetAll()) do
             if ply ~= bot and ((ply:IsPlayer() and (!LeadBot.TeamPlay or (LeadBot.TeamPlay and (ply:Team() ~= bot:Team())))) or ply:IsNPC()) and ply:GetPos():DistToSqr(bot:GetPos()) < 2250000 then
-                local targetpos = ply:EyePos() - Vector(0, 0, 10)
+                --[[local targetpos = ply:EyePos() - Vector(0, 0, 10)
                 local trace = util.TraceLine({
                     start = bot:GetShootPos(),
                     endpos = targetpos,
                     filter = function(ent) return ent == ply end
-                })
+                })]]
 
-                if trace.Entity == ply then
+                if ply:Alive() and controller:IsAbleToSee(ply) then
                     controller.Target = ply
                     controller.ForgetTarget = CurTime() + 2
                 end
@@ -247,14 +260,25 @@ function LeadBot.PlayerMove(bot, cmd, mv)
     end
 
     -- think every step of the way!
-    -- TODO: corner turning like nextbot npcs
     if segments[cur_segment + 1] and Vector(bot:GetPos().x, bot:GetPos().y, 0):DistToSqr(Vector(curgoal.pos.x, curgoal.pos.y)) < 100 then
         controller.cur_segment = controller.cur_segment + 1
         curgoal = segments[controller.cur_segment]
     end
 
+    local goalpos = curgoal.pos
+    local vel = bot:GetVelocity()
+    vel = Vector(math.floor(vel.x, 2), math.floor(vel.y, 2), 0)
+
+    if vel == Vector(0, 0, 0) or controller.NextCenter > CurTime() then
+        curgoal.pos = curgoal.area:GetCenter()
+        goalpos = segments[controller.cur_segment - 1].area:GetCenter()
+        if vel == Vector(0, 0, 0) then
+            controller.NextCenter = CurTime() + 0.25
+        end
+    end
+
     -- jump
-    if controller.NextJump ~= 0 and curgoal.pos.z > (bot:GetPos().z + 16) and controller.NextJump < CurTime() then
+    if controller.NextJump ~= 0 and goalpos.z > (bot:GetPos().z + 16) and controller.NextJump < CurTime() then
         controller.NextJump = 0
     end
 
@@ -271,7 +295,7 @@ function LeadBot.PlayerMove(bot, cmd, mv)
         lerpc = 1
     end
 
-    local mva = ((curgoal.pos + bot:GetViewOffset()) - bot:GetShootPos()):Angle()
+    local mva = ((goalpos + bot:GetViewOffset()) - bot:GetShootPos()):Angle()
 
     mv:SetMoveAngles(mva)
 
@@ -279,8 +303,13 @@ function LeadBot.PlayerMove(bot, cmd, mv)
         bot:SetEyeAngles(LerpAngle(lerp, bot:EyeAngles(), (controller.Target:EyePos() - bot:GetShootPos()):Angle()))
         return
     else
-        local ang = LerpAngle(lerpc, bot:EyeAngles(), mva)
-        bot:SetEyeAngles(Angle(ang.p, ang.y, 0))
+        if controller.LookAtTime > CurTime() then
+            local ang = LerpAngle(lerpc, bot:EyeAngles(), controller.LookAt)
+            bot:SetEyeAngles(Angle(ang.p, ang.y, 0))
+        else
+            local ang = LerpAngle(lerpc, bot:EyeAngles(), mva)
+            bot:SetEyeAngles(Angle(ang.p, ang.y, 0))
+        end
     end
 end
 
@@ -310,8 +339,12 @@ hook.Add("PostPlayerDeath", "LeadBot_Death", function(bot)
     end
 end)
 
-hook.Add("PlayerHurt", "LeadBot_Death", function(ply, bot, hp, dmg)
-    if IsValid(bot) and bot:IsPlayer() and bot:IsLBot() then
+hook.Add("EntityTakeDamage", "LeadBot_Hurt", function(ply, dmgi)
+    local bot = dmgi:GetAttacker()
+    local hp = ply:Health()
+    local dmg = dmgi:GetDamage()
+
+    if IsValid(ply) and ply:IsPlayer() and ply:IsLBot() then
         LeadBot.PlayerHurt(ply, bot, hp, dmg)
     end
 end)
@@ -380,5 +413,11 @@ function player_meta.GetInfo(self, convar)
         end
     else
         return oldInfo(self, convar)
+    end
+end
+
+function player_meta.GetController(self)
+    if self:IsLBot() then
+        return self.ControllerBot
     end
 end
