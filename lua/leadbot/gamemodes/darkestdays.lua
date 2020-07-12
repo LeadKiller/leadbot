@@ -77,7 +77,7 @@ function LeadBot.PlayerSpawn(bot)
     build.OnSet(bot)
 
     -- hats
-    if !bot.Suit then
+    if !bot.Suit or #bot.Suit < 1 then
         local hats = {}
         local miscs = {}
         local hats_equip = {}
@@ -270,7 +270,20 @@ function LeadBot.PlayerMove(bot, cmd, mv)
     -- controller.MovingBack = false
 
     if !IsValid(controller.Target) and (!controller.PosGen or bot:GetPos():DistToSqr(controller.PosGen) < 1000 or controller.LastSegmented < CurTime()) then
-        if gametype == "koth" then
+        if gametype == "htf" then
+            if bot:IsCarryingFlag() then
+                controller.PosGen = controller:FindSpot("random", {radius = 12500})
+                controller.LastSegmented = CurTime() + 8
+            else
+                local flag = ents.FindByClass("htf_flag")[1]
+                local rand = VectorRand() * 64
+                if !IsValid(flag:GetCarrier()) then
+                    rand = VectorRand() * 32
+                end
+                controller.PosGen = flag:GetPos() + Vector(rand.x, rand.y, 0)
+                controller.LastSegmented = CurTime() + math.random(2, 3)
+            end
+        elseif gametype == "koth" then
             local rand = VectorRand() * (ents.FindByClass("koth_point")[1]:GetRadius() - 4)
             controller.PosGen = ents.FindByClass("koth_point")[1]:GetPos() + Vector(rand.x, rand.y, 0)
             controller.LastSegmented = CurTime() + math.random(3, 6)
@@ -279,7 +292,7 @@ function LeadBot.PlayerMove(bot, cmd, mv)
             controller.PosGen = controller:FindSpot("random", {radius = 12500})
             controller.LastSegmented = CurTime() + 10
         end
-    elseif IsValid(controller.Target) then
+    elseif IsValid(controller.Target) and (gametype ~= "htf" or !bot:IsCarryingFlag()) then
         -- move to our target
         local distance = controller.Target:GetPos():DistToSqr(bot:GetPos())
         controller.PosGen = controller.Target:GetPos()
