@@ -87,6 +87,8 @@ function LeadBot.PlayerMove(bot, cmd, mv)
                 end
             end
         end
+    elseif controller.ForgetTarget < CurTime() and controller:IsAbleToSee(controller.Target) then
+        controller.ForgetTarget = CurTime() + 2
     end
 
     local dt = util.QuickTrace(bot:EyePos(), bot:GetForward() * 45, bot)
