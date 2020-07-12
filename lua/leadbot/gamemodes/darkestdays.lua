@@ -51,7 +51,7 @@ local function botTalk(bot, cmd)
 end
 
 function LeadBot.PlayerHurt(ply, bot, hp, dmg)
-    if hp <= dmg and math.random(4) == 1 then
+    if hp <= dmg and math.random(4) == 1 and IsValid(bot) and bot:IsPlayer() and bot:IsLBot() then
         -- LeadBot.TalkToMe(bot, "taunt")
         botTalk(bot, "taunt")
     end
@@ -142,11 +142,16 @@ function LeadBot.PlayerSpawn(bot)
 end
 
 local gametype
+local door_enabled
 
 function LeadBot.Think()
     if !gametype then
         LeadBot.TeamPlay = GAMEMODE:GetGametype() ~= "ffa"
         gametype = GAMEMODE:GetGametype()
+
+        if ents.FindByClass("prop_door_rotating")[1] then
+            door_enabled = true
+        end
     end
 
     for _, bot in pairs(player.GetAll()) do
@@ -224,6 +229,8 @@ function LeadBot.StartCommand(bot, cmd)
     cmd:SetButtons(buttons)
 end
 
+local objective
+
 function LeadBot.PlayerMove(bot, cmd, mv)
     local controller = bot.ControllerBot
 
@@ -285,41 +292,65 @@ function LeadBot.PlayerMove(bot, cmd, mv)
         controller.ForgetTarget = CurTime() + 2
     end
 
-    local dt = util.QuickTrace(bot:EyePos(), bot:GetForward() * 45, bot)
+    if door_enabled then
+        local dt = util.QuickTrace(bot:EyePos(), bot:GetForward() * 45, bot)
 
-    if IsValid(dt.Entity) and dt.Entity:GetClass() == "prop_door_rotating" then
-        dt.Entity:Fire("Open","",0)
+        if IsValid(dt.Entity) and dt.Entity:GetClass() == "prop_door_rotating" then
+            dt.Entity:Fire("Open","",0)
+        end
     end
 
     -- controller.MovingBack = false
 
-    if !IsValid(controller.Target) and (!controller.PosGen or bot:GetPos():DistToSqr(controller.PosGen) < 1000 or controller.LastSegmented < CurTime()) then
+    if !IsValid(controller.Target) and (!controller.PosGen or (gametype ~= "htf" and gametype ~= "koth" and bot:GetPos():DistToSqr(controller.PosGen) < 1000) or controller.LastSegmented < CurTime()) then
         if gametype == "htf" then
             if bot:IsCarryingFlag() then
                 controller.PosGen = controller:FindSpot("random", {radius = 12500})
                 controller.LastSegmented = CurTime() + 8
             else
-                local flag = ents.FindByClass("htf_flag")[1]
-                local rand = VectorRand() * 64
-                if !IsValid(flag:GetCarrier()) then
-                    rand = VectorRand() * 32
+                if !IsValid(objective) then
+                    objective = ents.FindByClass("htf_flag")[1]
                 end
+
+                local flag = objective
+                local rand = 64
+
+                if !IsValid(flag:GetCarrier()) then
+                    rand = 32
+                end
+
+                rand = VectorRand() * rand
                 controller.PosGen = flag:GetPos() + Vector(rand.x, rand.y, 0)
                 controller.LastSegmented = CurTime() + math.random(2, 3)
             end
         elseif gametype == "koth" then
-            local rand = VectorRand() * (ents.FindByClass("koth_point")[1]:GetRadius() - 4)
-            controller.PosGen = ents.FindByClass("koth_point")[1]:GetPos() + Vector(rand.x, rand.y, 0)
+            if !IsValid(objective) then
+                objective = ents.FindByClass("koth_point")[1]
+            end
+
+            local point = objective
+            local point_pos = point:GetPos()
+            local rand = (point:GetRadius() - 4)
+
+            if IsValid(controller.Target) then
+                rand = rand * 1.25
+            end
+
+            rand = VectorRand() * rand
+            controller.PosGen = point_pos + Vector(rand.x, rand.y, 0)
             controller.LastSegmented = CurTime() + math.random(3, 6)
         else
             -- find a random spot on the map, and in 10 seconds do it again!
             controller.PosGen = controller:FindSpot("random", {radius = 12500})
             controller.LastSegmented = CurTime() + 10
         end
-    elseif IsValid(controller.Target) and (gametype ~= "htf" or !bot:IsCarryingFlag()) then
+    elseif IsValid(controller.Target) and ((gametype == "htf" and !bot:IsCarryingFlag()) or (gametype ~= "koth" and (bot:LBGetStrategy() ~= 1 or wep.Base ~= "dd_meleebase")) or true) then
         -- move to our target
         local distance = controller.Target:GetPos():DistToSqr(bot:GetPos())
-        controller.PosGen = controller.Target:GetPos()
+        if controller.LastSegmented < CurTime() then
+            controller.PosGen = controller.Target:GetPos()
+            controller.LastSegmented = CurTime() + math.Rand(1.1, 1.3)
+        end
 
         -- back up if the target is really close
         -- TODO: find a random spot rather than trying to back up into what could just be a wall
@@ -371,17 +402,11 @@ function LeadBot.PlayerMove(bot, cmd, mv)
         controller.NextJump = 0
     end
 
-    if GetConVar("developer"):GetBool() then
-        controller.P:Draw()
-    end
-
     -- eyesight
-    local lerp = FrameTime() * math.random(8, 10)
-    local lerpc = FrameTime() * 8
+    local lerp = FrameTime() * 8
 
     if !LeadBot.LerpAim then
         lerp = 1
-        lerpc = 1
     end
 
     local mva = ((goalpos + bot:GetViewOffset()) - bot:GetShootPos()):Angle()
@@ -392,11 +417,16 @@ function LeadBot.PlayerMove(bot, cmd, mv)
         bot:SetEyeAngles(LerpAngle(lerp, bot:EyeAngles(), (controller.Target:EyePos() - bot:GetShootPos()):Angle()))
         return
     else
+        if gametype == "koth" and controller.LookAtTime < CurTime() and IsValid(objective) and objective:GetPos():DistToSqr(controller:GetPos()) <= 16384 then
+            controller.LookAt = Angle(math.random(-40, 40), math.random(-180, 180), 0)
+            controller.LookAtTime = CurTime() + math.Rand(0.9, 1.3)
+        end
+
         if controller.LookAtTime > CurTime() then
-            local ang = LerpAngle(lerpc, bot:EyeAngles(), controller.LookAt)
+            local ang = LerpAngle(lerp, bot:EyeAngles(), controller.LookAt)
             bot:SetEyeAngles(Angle(ang.p, ang.y, 0))
         else
-            local ang = LerpAngle(lerpc, bot:EyeAngles(), mva)
+            local ang = LerpAngle(lerp, bot:EyeAngles(), mva)
             bot:SetEyeAngles(Angle(ang.p, ang.y, 0))
         end
     end
