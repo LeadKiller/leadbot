@@ -175,11 +175,13 @@ function LeadBot.FindClosest(controller)
     local distance = 9999
     local playing = players[1]
     local distanceplayer = 9999999
-    for k, v in pairs(players) do
-        distanceplayer = v:GetPos():DistToSqr(controller:GetPos())
-        if distance > distanceplayer and v ~= controller then
-            distance = distanceplayer
-            playing = v
+    for k, v in ipairs(players) do
+        if v:Alive() then
+            distanceplayer = v:GetPos():DistToSqr(controller:GetPos())
+            if distance > distanceplayer and v ~= controller then
+                distance = distanceplayer
+                playing = v
+            end
         end
     end
 
@@ -264,7 +266,7 @@ function LeadBot.PlayerMove(bot, cmd, mv)
 
     local zombies = gametype == "ts"
 
-    if (!zombies or zombies and bot:Team() ~= TEAM_THUG) and ((bot.NextSpawnTime and bot.NextSpawnTime + 1 > CurTime()) or !IsValid(controller.Target) or controller.ForgetTarget < CurTime() or !controller.Target:Alive()) then
+    if ((bot.NextSpawnTime and bot.NextSpawnTime + 1 > CurTime()) or !IsValid(controller.Target) or controller.ForgetTarget < CurTime() or !controller.Target:Alive()) then
         controller.Target = nil
     end
 
