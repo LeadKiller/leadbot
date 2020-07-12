@@ -42,6 +42,15 @@ function LeadBot.StartCommand(bot, cmd)
         buttons = buttons + IN_USE
     end
 
+    if controller.NextJump == 0 then
+        controller.NextJump = CurTime() + 1
+        buttons = buttons + IN_JUMP
+    end
+
+    if !bot:IsOnGround() and controller.NextJump > CurTime() then
+        buttons = buttons + IN_DUCK
+    end
+
     cmd:ClearButtons()
     cmd:ClearMovement()
     cmd:SetButtons(buttons)
@@ -79,6 +88,10 @@ function humenai(bot, cmd, mv)
 
     if controller:GetPos() ~= bot:GetPos() then
         controller:SetPos(bot:GetPos())
+    end
+
+    if controller:GetAngles() ~= bot:EyeAngles() then
+        controller:SetAngles(bot:EyeAngles())
     end
 
     local ghost = ents.FindByClass("slendy")[1] or team.GetPlayers(TEAM_SLENDER)[1]
@@ -153,7 +166,24 @@ function humenai(bot, cmd, mv)
         curgoal = segments[controller.cur_segment]
     end
 
-    local mva = ((curgoal.pos + bot:GetViewOffset()) - bot:GetShootPos()):Angle()
+    local goalpos = curgoal.pos
+    local vel = bot:GetVelocity()
+    vel = Vector(math.floor(vel.x, 2), math.floor(vel.y, 2), 0)
+
+    if vel == Vector(0, 0, 0) or controller.NextCenter > CurTime() then
+        curgoal.pos = curgoal.area:GetCenter()
+        goalpos = segments[controller.cur_segment - 1].area:GetCenter()
+        if vel == Vector(0, 0, 0) then
+            controller.NextCenter = CurTime() + 0.25
+        end
+    end
+
+    -- jump
+    if controller.NextJump ~= 0 and goalpos.z > (bot:GetPos().z + 16) and controller.NextJump < CurTime() then
+        controller.NextJump = 0
+    end
+
+    local mva = ((goalpos + bot:GetViewOffset()) - bot:GetShootPos()):Angle()
     mv:SetMoveAngles(mva)
 
     if IsValid(bot.TPage) then

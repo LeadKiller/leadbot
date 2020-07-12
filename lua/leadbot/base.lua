@@ -192,10 +192,7 @@ function LeadBot.PlayerMove(bot, cmd, mv)
     end
 
     mv:SetForwardSpeed(1200)
-    -- main thing that's keeping the bots from being lag free is seeking targets
-    -- losing about 4-25 fps with this
-    -- for now, using player.GetAll() rather than ents.GetAll()
-    -- having no npc support is bad, but I think most people will use this for dm
+
     if (bot.NextSpawnTime and bot.NextSpawnTime + 1 > CurTime()) or !IsValid(controller.Target) or controller.ForgetTarget < CurTime() or controller.Target:Health() < 1 then
         controller.Target = nil
     end

@@ -147,6 +147,10 @@ function LeadBot.PlayerMove(bot, cmd, mv)
         bot.ControllerBot:SetPos(bot:GetPos())
     end
 
+    if controller:GetAngles() ~= bot:EyeAngles() then
+        controller:SetAngles(bot:EyeAngles())
+    end
+
     bot.TargetEnt = nil
     bot.FollowPly = Entity(1)
     bot.UseEnt = nil
@@ -245,9 +249,22 @@ function LeadBot.PlayerMove(bot, cmd, mv)
     local curgoal = bot.LastPath[bot.CurSegment]
     if !curgoal then return end
 
-    -- think one step ahead!
-    if bot:GetPos():Distance(curgoal.pos) < 50 and bot.LastPath[bot.CurSegment + 1] then
-        curgoal = bot.LastPath[bot.CurSegment + 1]
+    -- think every step of the way!
+    if segments[cur_segment + 1] and Vector(bot:GetPos().x, bot:GetPos().y, 0):DistToSqr(Vector(curgoal.pos.x, curgoal.pos.y)) < 100 then
+        controller.cur_segment = controller.cur_segment + 1
+        curgoal = segments[controller.cur_segment]
+    end
+
+    local goalpos = curgoal.pos
+    local vel = bot:GetVelocity()
+    vel = Vector(math.floor(vel.x, 2), math.floor(vel.y, 2), 0)
+
+    if vel == Vector(0, 0, 0) or controller.NextCenter > CurTime() then
+        curgoal.pos = curgoal.area:GetCenter()
+        goalpos = segments[controller.cur_segment - 1].area:GetCenter()
+        if vel == Vector(0, 0, 0) then
+            controller.NextCenter = CurTime() + 0.25
+        end
     end
 
     ------------------------------
@@ -256,15 +273,15 @@ function LeadBot.PlayerMove(bot, cmd, mv)
 
     local lerp = 1
 
-    mv:SetMoveAngles(LerpAngle(lerp, mv:GetMoveAngles(), ((curgoal.pos + Vector(0, 0, 65)) - bot:GetShootPos()):Angle()))
+    mv:SetMoveAngles(LerpAngle(lerp, mv:GetMoveAngles(), ((goalpos + Vector(0, 0, 65)) - bot:GetShootPos()):Angle()))
 
     if IsValid(bot.TargetEnt) and bot:GetEyeTrace().Entity ~= bot.TargetEnt then
         local shouldvegoneforthehead = bot.TargetEnt:GetBonePosition(bot.TargetEnt:LookupBone("ValveBiped.Bip01_Head1")) or bot.TargetEnt:EyePos()
         local cang = --[[LerpAngle(lerp, bot:EyeAngles(), ]](shouldvegoneforthehead - bot:GetShootPos()):Angle() --)
         bot:SetEyeAngles(Angle(cang.p, cang.y, 0)) --[[+ bot:GetViewPunchAngles()]]
         return
-    elseif bot:GetPos():Distance(curgoal.pos) > 20 then
-        local ang2 = ((curgoal.pos + Vector(0, 0, 65)) - bot:GetShootPos()):Angle()
+    elseif bot:GetPos():Distance(goalpos) > 20 then
+        local ang2 = ((goalpos + Vector(0, 0, 65)) - bot:GetShootPos()):Angle()
         local ang = LerpAngle(lerp, mv:GetMoveAngles(), ang2)
         --local cang = LerpAngle(lerpc, bot:EyeAngles(), ang2)
         bot:SetEyeAngles(Angle(ang2.p, ang2.y, 0))

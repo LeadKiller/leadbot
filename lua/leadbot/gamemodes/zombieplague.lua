@@ -68,11 +68,12 @@ function LeadBot.PlayerMove(bot, cmd, mv)
         controller:SetPos(bot:GetPos())
     end
 
+    if controller:GetAngles() ~= bot:EyeAngles() then
+        controller:SetAngles(bot:EyeAngles())
+    end
+
     mv:SetForwardSpeed(1200)
-    -- main thing that's keeping the bots from being lag free is seeking targets
-    -- losing about 4-25 fps with this
-    -- for now, using player.GetAll() rather than ents.GetAll()
-    -- having no npc support is bad, but I think most people will use this for dm
+
     if (bot.NextSpawnTime and bot.NextSpawnTime + 1 > CurTime()) or !IsValid(controller.Target) or controller.ForgetTarget < CurTime() or controller.Target:Health() < 1 then
         controller.Target = nil
     end
@@ -80,14 +81,7 @@ function LeadBot.PlayerMove(bot, cmd, mv)
     if !IsValid(controller.Target) then
         for _, ply in ipairs(ents.GetAll()) do
             if ply ~= bot and ((ply:IsPlayer() and (ply:Team() ~= bot:Team())) or ply:IsNPC()) and ply:GetPos():DistToSqr(bot:GetPos()) < 2250000 then
-                local targetpos = ply:EyePos() - Vector(0, 0, 10)
-                local trace = util.TraceLine({
-                    start = bot:GetShootPos(),
-                    endpos = targetpos,
-                    filter = function(ent) return ent == ply end
-                })
-
-                if trace.Entity == ply then
+                if ply:Alive() and controller:IsAbleToSee(ply) then
                     controller.Target = ply
                     controller.ForgetTarget = CurTime() + 2
                 end
@@ -184,14 +178,25 @@ function LeadBot.PlayerMove(bot, cmd, mv)
     -- got nowhere to go, why keep moving?
     if curgoal then
         -- think every step of the way!
-        -- TODO: corner turning like nextbot npcs
         if segments[cur_segment + 1] and Vector(bot:GetPos().x, bot:GetPos().y, 0):DistToSqr(Vector(curgoal.pos.x, curgoal.pos.y)) < 100 then
             controller.cur_segment = controller.cur_segment + 1
             curgoal = segments[controller.cur_segment]
         end
 
+        local goalpos = curgoal.pos
+        local vel = bot:GetVelocity()
+        vel = Vector(math.floor(vel.x, 2), math.floor(vel.y, 2), 0)
+
+        if vel == Vector(0, 0, 0) or controller.NextCenter > CurTime() then
+            curgoal.pos = curgoal.area:GetCenter()
+            goalpos = segments[controller.cur_segment - 1].area:GetCenter()
+            if vel == Vector(0, 0, 0) then
+                controller.NextCenter = CurTime() + 0.25
+            end
+        end
+
         -- jump
-        if controller.NextJump ~= 0 and curgoal.pos.z > (bot:GetPos().z + 16) and controller.NextJump < CurTime() then
+        if controller.NextJump ~= 0 and goalpos.z > (bot:GetPos().z + 16) and controller.NextJump < CurTime() then
             controller.NextJump = 0
         end
 
@@ -199,7 +204,7 @@ function LeadBot.PlayerMove(bot, cmd, mv)
             controller.P:Draw()
         end
 
-        mva = ((curgoal.pos + bot:GetViewOffset()) - bot:GetShootPos()):Angle()
+        mva = ((goalpos + bot:GetViewOffset()) - bot:GetShootPos()):Angle()
 
         mv:SetMoveAngles(mva)
     else
@@ -210,8 +215,13 @@ function LeadBot.PlayerMove(bot, cmd, mv)
         bot:SetEyeAngles(LerpAngle(lerp, bot:EyeAngles(), (controller.Target:EyePos() - bot:GetShootPos()):Angle()))
         return
     elseif curgoal then
-        local ang = LerpAngle(lerpc, bot:EyeAngles(), mva)
-        bot:SetEyeAngles(Angle(ang.p, ang.y, 0))
+        if controller.LookAtTime > CurTime() then
+            local ang = LerpAngle(lerpc, bot:EyeAngles(), controller.LookAt)
+            bot:SetEyeAngles(Angle(ang.p, ang.y, 0))
+        else
+            local ang = LerpAngle(lerpc, bot:EyeAngles(), mva)
+            bot:SetEyeAngles(Angle(ang.p, ang.y, 0))
+        end
     elseif bot.hidingspot then
         bot.NextSearch = bot.NextSearch or CurTime()
         bot.SearchAngle = bot.SearchAngle or Angle(0, 0, 0)
