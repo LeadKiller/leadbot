@@ -5,6 +5,7 @@ LeadBot.TeamPlay = false -- don't hurt players on the bots team
 LeadBot.LerpAim = true -- interpolate aim (smooth aim)
 LeadBot.AFKBotOverride = false -- allows for gamemodes such as Dogfight which use IsBot() to pass real humans as bots
 LeadBot.SuicideAFK = false -- kill the player when entering/exiting afk
+LeadBot.NoFlashlight = false -- disable flashlight being enabled in dark areas
 LeadBot.Strategies = 1 -- how many strategies can the bot pick from
 
 --[[ COMMANDS ]]--
