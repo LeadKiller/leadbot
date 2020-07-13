@@ -286,6 +286,7 @@ function LeadBot.PlayerMove(bot, cmd, mv)
     mv:SetForwardSpeed(1200)
 
     local zombies = gametype == "ts"
+    local melee = IsValid(wep) and wep.Base == "dd_meleebase"
 
     if ((bot.NextSpawnTime and bot.NextSpawnTime + 1 > CurTime()) or !IsValid(controller.Target) or controller.ForgetTarget < CurTime() or !controller.Target:Alive()) then
         controller.Target = nil
@@ -367,18 +368,18 @@ function LeadBot.PlayerMove(bot, cmd, mv)
             controller.PosGen = controller:FindSpot("random", {radius = 12500})
             controller.LastSegmented = CurTime() + 10
         end
-    elseif IsValid(controller.Target) and ((gametype == "htf" and !bot:IsCarryingFlag()) or (gametype ~= "koth" and (bot:LBGetStrategy() ~= 1 or wep.Base ~= "dd_meleebase")) or true) then
+    elseif IsValid(controller.Target) and ((gametype == "htf" and !bot:IsCarryingFlag()) or (gametype ~= "koth" and (bot:LBGetStrategy() ~= 1 or !melee)) or true) then
         -- move to our target
         local distance = controller.Target:GetPos():DistToSqr(bot:GetPos())
         if controller.LastSegmented < CurTime() then
             controller.PosGen = controller.Target:GetPos()
-            controller.LastSegmented = CurTime() + math.Rand(1.1, 1.3)
+            controller.LastSegmented = CurTime() + ((melee and math.Rand(0.7, 0.9)) or math.Rand(1.1, 1.3))
         end
 
         -- back up if the target is really close
         -- TODO: find a random spot rather than trying to back up into what could just be a wall
         -- something like controller.PosGen = controller:FindSpot("random", {pos = bot:GetPos() - bot:GetForward() * 350, radius = 1000})?
-        if IsValid(wep) and wep.Base ~= "dd_meleebase" and distance <= 90000 then
+        if !melee and distance <= 90000 then
             -- controller.MovingBack = true
             mv:SetForwardSpeed(-1200)
         end
