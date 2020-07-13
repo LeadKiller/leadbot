@@ -22,6 +22,7 @@ function ENT:Initialize()
 	self.NextCenter = 0
 	self.LookAt = Angle(0, 0, 0)
 	self.LookAtTime = 0
+	self.goalPos = Vector(0, 0, 0)
 end
 
 function ENT:ChasePos()

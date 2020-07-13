@@ -202,6 +202,8 @@ function LeadBot.PlayerMove(bot, cmd, mv)
             controller.NextJump = 0
         end
 
+        controller.goalPos = goalpos
+
         if DEBUG then
             controller.P:Draw()
         end

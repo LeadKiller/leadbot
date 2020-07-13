@@ -42,6 +42,21 @@ function LeadBot.StartCommand(bot, cmd)
         buttons = buttons + IN_USE
     end
 
+    if bot:GetMoveType() == MOVETYPE_LADDER then
+        local pos = controller.goalPos
+        local ang = ((pos + bot:GetViewOffset()) - bot:GetShootPos()):Angle()
+
+        if pos.z > controller:GetPos().z then
+            controller.LookAt = Angle(20, ang.y, 0)
+        else
+            controller.LookAt = Angle(-20, ang.y, 0)
+        end
+
+        controller.LookAtTime = CurTime() + 0.1
+        controller.NextJump = -1
+        buttons = buttons + IN_FORWARD
+    end
+
     if controller.NextJump == 0 then
         controller.NextJump = CurTime() + 1
         buttons = buttons + IN_JUMP
@@ -182,6 +197,8 @@ function humenai(bot, cmd, mv)
     if controller.NextJump ~= 0 and goalpos.z > (bot:GetPos().z + 16) and controller.NextJump < CurTime() then
         controller.NextJump = 0
     end
+
+    controller.goalPos = goalpos
 
     local mva = ((goalpos + bot:GetViewOffset()) - bot:GetShootPos()):Angle()
     mv:SetMoveAngles(mva)
