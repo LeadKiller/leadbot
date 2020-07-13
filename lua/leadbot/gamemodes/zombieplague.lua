@@ -186,10 +186,8 @@ function LeadBot.PlayerMove(bot, cmd, mv)
         end
 
         local goalpos = curgoal.pos
-        local vel = bot:GetVelocity()
-        vel = Vector(math.floor(vel.x, 2), math.floor(vel.y, 2), 0)
 
-        if vel == Vector(0, 0, 0) or controller.NextCenter > CurTime() then
+        if bot:GetVelocity():Length2DSqr() <= 225 or controller.NextCenter > CurTime() then
             curgoal.pos = curgoal.area:GetCenter()
             goalpos = segments[controller.cur_segment - 1].area:GetCenter()
             if vel == Vector(0, 0, 0) then
