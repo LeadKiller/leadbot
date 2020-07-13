@@ -25,6 +25,8 @@ function LeadBot.Think()
 end
 
 function LeadBot.StartCommand(bot, cmd)
+    local controller = bot.ControllerBot
+
     bot.LHP = bot.LHP or bot:Health()
     bot.Caution = bot.Caution or CurTime() + 30
     bot.LastChat = bot.LastChat or CurTime()
