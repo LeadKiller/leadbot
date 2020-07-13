@@ -118,6 +118,11 @@ name_Default["refugee03"] = "Sandro"
 name_Default["refugee04"] = "Vance"
 
 function LeadBot.AddBot()
+    if !FindMetaTable("NextBot").GetFOV then
+        ErrorNoHalt("You must be using the dev version of Garry's mod!\nhttps://wiki.facepunch.com/gmod/Dev_Branch\n")
+        return
+    end
+
     if !navmesh.IsLoaded() and !LeadBot.NoNavMesh then
         ErrorNoHalt("There is no navmesh! Generate one using \"nav_generate\"!\n")
         return

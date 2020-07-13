@@ -14,14 +14,14 @@ function ENT:Initialize()
 
 	self:SetFOV((fov_convar:GetBool() and math.Clamp(fov_convar:GetInt(), 75, 100)) or 90)
 	self.PosGen = nil
-	self.NextJump = CurTime()
+	self.NextJump = 0
 	self.cur_segment = 2
 	self.Target = nil
-	self.LastSegmented = CurTime()
-	self.ForgetTarget = CurTime()
-	self.NextCenter = CurTime()
+	self.LastSegmented = 0
+	self.ForgetTarget = 0
+	self.NextCenter = 0
 	self.LookAt = Angle(0, 0, 0)
-	self.LookAtTime = CurTime()
+	self.LookAtTime = 0
 end
 
 function ENT:ChasePos()
