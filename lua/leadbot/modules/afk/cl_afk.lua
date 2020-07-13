@@ -64,6 +64,7 @@ hook.Add("CalcView", "LeadBot_AFK", function(ply, origin, angles)
     local view = {}
 
     if tp then
+        origin = ply:EyePos()
         local trace = util.TraceHull({
             start = origin + NA:Forward() * -5,
             endpos = origin + NA:Forward() * -75,
