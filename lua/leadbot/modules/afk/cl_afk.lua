@@ -9,7 +9,11 @@ end)
 local tp = false
 local last_TP = false
 local NA = Angle(0, 0, 0)
+local scroll = 0
 local lastsend = CurTime()
+local tp_Gamemodes = {}
+tp_Gamemodes["sandbox"] = true
+tp_Gamemodes["darkestdays"] = true
 
 hook.Add("CreateMove", "LeadBot_AFK", function(cmd)
     local ply = LocalPlayer()
@@ -21,13 +25,19 @@ hook.Add("CreateMove", "LeadBot_AFK", function(cmd)
             lastsend = CurTime() + 5
         end
 
-        if cmd:KeyDown(IN_ATTACK) and engine.ActiveGamemode() == "sandbox" then
+        if cmd:KeyDown(IN_ATTACK) and tp_Gamemodes[engine.ActiveGamemode()] then
             if !last_TP then
                 tp = !tp
                 last_TP = true
             end
         else
             last_TP = false
+        end
+
+        if input.WasMousePressed(MOUSE_WHEEL_DOWN) then
+            scroll = math.Clamp(scroll + 4, -35, 45)
+        elseif input.WasMousePressed(MOUSE_WHEEL_UP) then
+            scroll = math.Clamp(scroll - 4, -35, 45)
         end
 
         if tp then
@@ -67,7 +77,7 @@ hook.Add("CalcView", "LeadBot_AFK", function(ply, origin, angles)
         origin = ply:EyePos()
         local trace = util.TraceHull({
             start = origin + NA:Forward() * -5,
-            endpos = origin + NA:Forward() * -75,
+            endpos = origin + NA:Forward() * (-75 - scroll),
             filter = ply,
             mins = Vector(-8, -8, -8),
             maxs = Vector(8, 8, 8),
