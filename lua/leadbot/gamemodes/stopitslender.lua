@@ -160,6 +160,12 @@ function humenai(bot, cmd, mv)
         controller.PosGen = bot.TPage:GetPos()
     end
 
+    local dt = util.QuickTrace(bot:EyePos(), bot:GetForward() * 45, bot)
+
+    if IsValid(dt.Entity) and dt.Entity:GetClass() == "prop_door_rotating" then
+        dt.Entity:Fire("OpenAwayFrom", bot, 0)
+    end
+
     if !controller.P then
         return
     end
@@ -194,7 +200,7 @@ function humenai(bot, cmd, mv)
     end
 
     -- jump
-    if controller.NextJump ~= 0 and goalpos.z > (bot:GetPos().z + 16) and controller.NextJump < CurTime() then
+    if controller.NextJump ~= 0 and segments[controller.cur_segment].type ~= 0 and controller.NextJump < CurTime() then
         controller.NextJump = 0
     end
 
