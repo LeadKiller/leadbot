@@ -47,9 +47,9 @@ function LeadBot.StartCommand(bot, cmd)
         local ang = ((pos + bot:GetViewOffset()) - bot:GetShootPos()):Angle()
 
         if pos.z > controller:GetPos().z then
-            controller.LookAt = Angle(20, ang.y, 0)
+            controller.LookAt = Angle(-30, ang.y, 0)
         else
-            controller.LookAt = Angle(-20, ang.y, 0)
+            controller.LookAt = Angle(30, ang.y, 0)
         end
 
         controller.LookAtTime = CurTime() + 0.1
