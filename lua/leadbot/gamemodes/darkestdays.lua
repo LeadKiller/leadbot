@@ -5,6 +5,7 @@ LeadBot.SetModel = true
 LeadBot.Gamemode = "darkestdays"
 LeadBot.TeamPlay = false
 LeadBot.LerpAim = true
+LeadBot.NoFlashlight = true
 
 --[[GAMEMODE CONFIGURATION END]]--
 

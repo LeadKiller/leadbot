@@ -36,7 +36,7 @@ net.Receive("leadbot_Flashlight", function(_, ply)
         local lighton = light == Vector(0, 0, 0)
 
         if lighton then
-            bot.LastLight2 = math.Clamp(bot.LastLight2 + 1, 0, 30)
+            bot.LastLight2 = math.Clamp(bot.LastLight2 + 1, 0, 3)
         else
             bot.LastLight2 = 0
         end
