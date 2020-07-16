@@ -280,14 +280,16 @@ function LeadBot.PostPlayerDeath(bot)
 end
 
 function LeadBot.PlayerHurt(ply, bot, hp, dmg)
-    if hp <= dmg and math.random(3) == 1 and bot:IsPlayer() and bot:IsLBot() then
-        LeadBot.TalkToMe(bot, "taunt")
+    if bot:IsPlayer() then
+        if hp <= dmg and math.random(3) == 1 and bot:IsLBot() then
+            LeadBot.TalkToMe(bot, "taunt")
+        end
+
+        local controller = ply:GetController()
+
+        controller.LookAtTime = CurTime() + 2
+        controller.LookAt = ((bot:GetPos() + VectorRand() * 128) - ply:GetPos()):Angle()
     end
-
-    local controller = ply:GetController()
-
-    controller.LookAtTime = CurTime() + 2
-    controller.LookAt = ((bot:GetPos() + VectorRand() * 128) - ply:GetPos()):Angle()
 end
 
 function LeadBot.StartCommand(bot, cmd)
