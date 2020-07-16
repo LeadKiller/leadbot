@@ -87,7 +87,7 @@ hook.Add("CalcView", "LeadBot_AFK", function(ply, origin, angles)
         view.origin = trace.HitPos
         view.drawviewer = true
     else
-        ang = LerpAngle(FrameTime() * 8, ang, angles)
+        ang = LerpAngle(FrameTime() * 16, ang, angles)
         ang = Angle(ang.p, ang.y, 0)
         NA = ang
         view.angles = ang
