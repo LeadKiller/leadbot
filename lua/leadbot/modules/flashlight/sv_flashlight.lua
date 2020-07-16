@@ -41,7 +41,7 @@ net.Receive("leadbot_Flashlight", function(_, ply)
             bot.LastLight2 = 0
         end
 
-        bot.FlashlightOn = lighton and bot.LastLight2 > 3
+        bot.FlashlightOn = lighton and bot.LastLight2 == 3
     end
 end)
 
