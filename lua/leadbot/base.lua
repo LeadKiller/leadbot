@@ -451,7 +451,7 @@ function LeadBot.PlayerMove(bot, cmd, mv)
     end
 
     -- jump
-    if controller.NextJump ~= 0 and segments[controller.cur_segment].type ~= 0 and controller.NextJump < CurTime() then
+    if controller.NextJump ~= 0 and segments[controller.cur_segment].type > 1 and controller.NextJump < CurTime() then
         controller.NextJump = 0
     end
 
