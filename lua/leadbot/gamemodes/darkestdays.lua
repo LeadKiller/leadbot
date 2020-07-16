@@ -442,9 +442,13 @@ function LeadBot.PlayerMove(bot, cmd, mv)
         bot:SetEyeAngles(LerpAngle(lerp, bot:EyeAngles(), (controller.Target:EyePos() - bot:GetShootPos()):Angle()))
         return
     else
-        if gametype == "koth" and controller.LookAtTime < CurTime() and IsValid(objective) and objective:GetPos():DistToSqr(controller:GetPos()) <= 16384 then
-            controller.LookAt = Angle(math.random(-40, 40), math.random(-180, 180), 0)
-            controller.LookAtTime = CurTime() + math.Rand(0.9, 1.3)
+        if gametype == "koth" and IsValid(objective) and objective:GetPos():DistToSqr(controller:GetPos()) <= 16384 then
+            mv:SetForwardSpeed(0)
+
+            if controller.LookAtTime < CurTime() then
+                controller.LookAt = Angle(math.random(-40, 40), math.random(-180, 180), 0)
+                controller.LookAtTime = CurTime() + math.Rand(0.9, 1.3)
+            end
         end
 
         if controller.LookAtTime > CurTime() then
