@@ -211,7 +211,7 @@ function LeadBot.PlayerMove(bot, cmd, mv)
             controller.P:Draw()
         end
 
-        mva = ((goalpos + bot:GetViewOffset()) - bot:GetShootPos()):Angle()
+        mva = ((goalpos + bot:GetCurrentViewOffset()) - bot:GetShootPos()):Angle()
 
         mv:SetMoveAngles(mva)
     else

@@ -341,7 +341,7 @@ function LeadBot.PlayerMove(bot, cmd, mv)
         lerpc = 1
     end
 
-    local mva = ((curgoal.pos + bot:GetViewOffset()) - bot:GetShootPos()):Angle()
+    local mva = ((curgoal.pos + bot:GetCurrentViewOffset()) - bot:GetShootPos()):Angle()
 
     mv:SetMoveAngles(mva)
 

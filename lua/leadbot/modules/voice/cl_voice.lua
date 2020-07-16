@@ -33,7 +33,7 @@ hook.Add("PostPlayerDraw", "LeadBot_VoiceIcon", function(ply)
     if !IsValid(ply) or !ply:IsPlayer() or !ply:IsBot() or !IsValid(ply.ChattingS) then return end
 
     local ang = EyeAngles()
-    local pos = ply:GetPos() + ply:GetViewOffset() + Vector(0, 0, 14)
+    local pos = ply:GetPos() + ply:GetCurrentViewOffset() + Vector(0, 0, 14)
     ang:RotateAroundAxis(ang:Up(), -90)
     ang:RotateAroundAxis(ang:Forward(), 90)
 

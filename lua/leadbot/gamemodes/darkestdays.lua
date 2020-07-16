@@ -221,7 +221,7 @@ function LeadBot.StartCommand(bot, cmd)
 
     if bot:GetMoveType() == MOVETYPE_LADDER then
         local pos = controller.goalPos
-        local ang = ((pos + bot:GetViewOffset()) - bot:GetShootPos()):Angle()
+        local ang = ((pos + bot:GetCurrentViewOffset()) - bot:GetShootPos()):Angle()
 
         if pos.z > controller:GetPos().z then
             controller.LookAt = Angle(-30, ang.y, 0)
@@ -441,7 +441,7 @@ function LeadBot.PlayerMove(bot, cmd, mv)
         lerp = 1
     end
 
-    local mva = ((goalpos + bot:GetViewOffset()) - bot:GetShootPos()):Angle()
+    local mva = ((goalpos + bot:GetCurrentViewOffset()) - bot:GetShootPos()):Angle()
 
     mv:SetMoveAngles(mva)
 
