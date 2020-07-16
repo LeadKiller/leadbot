@@ -59,7 +59,9 @@ function LeadBot.StartCommand(bot, cmd)
         buttons = buttons + IN_FORWARD
     end
 
-    if controller.NextJump == 0 then
+    if controller.NextDuck > CurTime() then
+        buttons = buttons + IN_DUCK
+    elseif controller.NextJump == 0 then
         controller.NextJump = CurTime() + 1
         buttons = buttons + IN_JUMP
     end
@@ -200,8 +202,13 @@ function humenai(bot, cmd, mv)
     end
 
     -- jump
-    if controller.NextJump ~= 0 and segments[controller.cur_segment].type > 1 and controller.NextJump < CurTime() then
+    if controller.NextJump ~= 0 and curgoal.type > 1 and controller.NextJump < CurTime() then
         controller.NextJump = 0
+    end
+
+    -- duck
+    if curgoal.area:GetAttributes() == NAV_MESH_CROUCH then
+        controller.NextDuck = CurTime() + 0.1
     end
 
     controller.goalPos = goalpos

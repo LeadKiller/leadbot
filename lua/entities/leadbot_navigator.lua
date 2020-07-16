@@ -15,6 +15,7 @@ function ENT:Initialize()
 	self:SetFOV((fov_convar:GetBool() and math.Clamp(fov_convar:GetInt(), 75, 100)) or 90)
 	self.PosGen = nil
 	self.NextJump = 0
+	self.NextDuck = 0
 	self.cur_segment = 2
 	self.Target = nil
 	self.LastSegmented = 0
