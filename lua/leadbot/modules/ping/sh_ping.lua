@@ -1,8 +1,8 @@
 local meta = FindMetaTable("Player")
 local oldFunc = meta.Ping
-local ping = -0
+local ping = 0
 local fakeping = true
-local convar = CreateConVar("leadbot_fakeping", "0", {FCVAR_ARCHIVE, FCVAR_NOTIFY, FCVAR_REPLICATED}, "Enables fakeping (Do not use this in public servers, only LAN/Singleplayer. It can get you blacklisted and possibly banned!)")
+local convar = CreateConVar("leadbot_fakeping", "0", {FCVAR_ARCHIVE, FCVAR_NOTIFY, FCVAR_REPLICATED}, "Enables fakeping (Do not use this in public servers, only LAN/Singleplayer. It can get you blacklisted and possibly banned!)\nSet to 2 to make it use BOT instead")
 
 function meta:Ping()
     if convar:GetBool() and self:IsBot() then
@@ -14,6 +14,10 @@ function meta:Ping()
                 self.FakePing = self.OFakePing + math.random(3)
             elseif math.random(125) == 1 then
                 self.FakePing = self.OFakePing - math.random(3)
+            end
+
+            if convar:GetInt() == 2 then
+                self.FakePing = "BOT"
             end
 
             return self.FakePing
