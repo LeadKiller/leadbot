@@ -357,7 +357,7 @@ function LeadBot.PlayerMove(bot, cmd, mv)
 
             local point = objective
             local point_pos = point:GetPos()
-            local rand = (point:GetRadius() - 4)
+            local rand = (point:GetRadius() - 12)
 
             if IsValid(controller.Target) then
                 rand = rand * 1.25
@@ -414,11 +414,34 @@ function LeadBot.PlayerMove(bot, cmd, mv)
 
     local goalpos = curgoal.pos
 
-    if bot:GetVelocity():Length2DSqr() <= 225 or controller.NextCenter > CurTime() then
-        curgoal.pos = curgoal.area:GetCenter()
-        goalpos = segments[controller.cur_segment - 1].area:GetCenter()
-        if vel == Vector(0, 0, 0) then
-            controller.NextCenter = CurTime() + 0.25
+    if IsValid(objective) then
+        objective.radius2d = objective.radius2d or (objective:GetRadius() - 4) * (objective:GetRadius() - 4)
+    end
+
+    local inobjective = IsValid(objective) and objective:GetPos():DistToSqr(controller:GetPos()) <= objective.radius2d
+
+    if bot:GetVelocity():Length2DSqr() <= 225 and (gametype ~= "koth" or !inobjective) then
+        if controller.NextCenter < CurTime() then
+            controller.strafeAngle = ((controller.strafeAngle == 1 and 2) or 1)
+            -- curgoal.pos = curgoal.area:GetCenter()
+            -- goalpos = segments[controller.cur_segment - 1].area:GetCenter()
+
+            controller.NextCenter = CurTime() + math.Rand(0.3, 0.65)
+        elseif controller.nextStuckJump < CurTime() then
+            if !bot:Crouching() then
+                controller.NextJump = 0
+            end
+            controller.nextStuckJump = CurTime() + math.Rand(1, 2)
+        end
+    end
+
+    if controller.NextCenter > CurTime() then
+        if controller.strafeAngle == 1 then
+            mv:SetSideSpeed(1500)
+        elseif controller.strafeAngle == 2 then
+            mv:SetSideSpeed(-1500)
+        else
+            mv:SetForwardSpeed(-1500)
         end
     end
 
@@ -446,10 +469,14 @@ function LeadBot.PlayerMove(bot, cmd, mv)
     mv:SetMoveAngles(mva)
 
     if IsValid(controller.Target) then
-        bot:SetEyeAngles(LerpAngle(lerp, bot:EyeAngles(), (controller.Target:EyePos() - bot:GetShootPos()):Angle()))
+        local targetpos = controller.Target:EyePos()
+        -- targetpos.z = math.random(controller.Target:GetPos().z, targetpos.z)
+        -- targetpos = targetpos + VectorRand() * 64
+
+        bot:SetEyeAngles(LerpAngle(lerp, bot:EyeAngles(), (targetpos - bot:GetShootPos()):Angle()))
         return
     else
-        if gametype == "koth" and IsValid(objective) and objective:GetPos():DistToSqr(controller:GetPos()) <= 16384 then
+        if gametype == "koth" and inobjective then
             mv:SetForwardSpeed(0)
 
             if controller.LookAtTime < CurTime() then

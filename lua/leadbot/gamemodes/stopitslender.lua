@@ -193,11 +193,25 @@ function humenai(bot, cmd, mv)
 
     local goalpos = curgoal.pos
 
-    if bot:GetVelocity():Length2DSqr() <= 225 or controller.NextCenter > CurTime() then
-        curgoal.pos = curgoal.area:GetCenter()
-        goalpos = segments[controller.cur_segment - 1].area:GetCenter()
-        if vel == Vector(0, 0, 0) then
-            controller.NextCenter = CurTime() + 0.25
+    if bot:GetVelocity():Length2DSqr() <= 225 then
+        if controller.NextCenter < CurTime() then
+            controller.strafeAngle = ((controller.strafeAngle == 1 and 2) or 1)
+            controller.NextCenter = CurTime() + math.Rand(0.3, 0.65)
+        elseif controller.nextStuckJump < CurTime() then
+            if !bot:Crouching() then
+                controller.NextJump = 0
+            end
+            controller.nextStuckJump = CurTime() + math.Rand(1, 2)
+        end
+    end
+
+    if controller.NextCenter > CurTime() then
+        if controller.strafeAngle == 1 then
+            mv:SetSideSpeed(1500)
+        elseif controller.strafeAngle == 2 then
+            mv:SetSideSpeed(-1500)
+        else
+            mv:SetForwardSpeed(-1500)
         end
     end
 

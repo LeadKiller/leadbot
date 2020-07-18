@@ -24,6 +24,8 @@ function ENT:Initialize()
 	self.LookAt = Angle(0, 0, 0)
 	self.LookAtTime = 0
 	self.goalPos = Vector(0, 0, 0)
+	self.strafeAngle = 0
+	self.nextStuckJump = 0
 end
 
 function ENT:ChasePos()
