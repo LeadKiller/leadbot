@@ -51,6 +51,7 @@ function LeadBot.Botize(ply, togg)
         ply.ControllerBot = ents.Create("leadbot_navigator")
         ply.ControllerBot:Spawn()
         ply.ControllerBot:SetOwner(ply)
+        ply.ControllerBot:SetFOV(ply:GetFOV())
         ply.LastSegmented = CurTime()
         ply.CurSegment = 2
         if GetConVar("leadbot_strategy"):GetBool() then
