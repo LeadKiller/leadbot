@@ -416,11 +416,15 @@ function LeadBot.PlayerMove(bot, cmd, mv)
 
     local goalpos = curgoal.pos
 
-    if IsValid(objective) then
-        objective.radius2d = objective.radius2d or (objective:GetRadius() - 4) * (objective:GetRadius() - 4)
-    end
+    local inobjective = false
 
-    local inobjective = IsValid(objective) and objective:GetPos():DistToSqr(controller:GetPos()) <= objective.radius2d
+    if gametype == "koth" then
+        if IsValid(objective) then
+            objective.radius2d = objective.radius2d or (objective:GetRadius() - 4) * (objective:GetRadius() - 4)
+        end
+
+        inobjective = IsValid(objective) and objective:GetPos():DistToSqr(controller:GetPos()) <= objective.radius2d
+    end
 
     if bot:GetVelocity():Length2DSqr() <= 225 and (gametype ~= "koth" or !inobjective) then
         if controller.NextCenter < CurTime() then
