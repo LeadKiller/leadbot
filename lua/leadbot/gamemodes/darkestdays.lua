@@ -201,6 +201,8 @@ function LeadBot.StartCommand(bot, cmd)
     local controller = bot.ControllerBot
     local target = controller.Target
 
+    if !IsValid(controller) then return end
+
     if LeadBot.NoSprint then
         buttons = 0
     end
