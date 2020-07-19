@@ -168,7 +168,7 @@ function humenai(bot, cmd, mv)
 
     local dt = util.QuickTrace(bot:EyePos(), bot:GetForward() * 45, bot)
 
-    if IsValid(dt.Entity) and dt.Entity:GetClass() == "prop_door_rotating" then
+    if IsValid(dt.Entity) and string.find(dt.Entity:GetClass(), "door") then
         dt.Entity:Fire("OpenAwayFrom", bot, 0)
     end
 
