@@ -232,14 +232,43 @@ function humenai(bot, cmd, mv)
     local mva = ((goalpos + bot:GetCurrentViewOffset()) - bot:GetShootPos()):Angle()
     mv:SetMoveAngles(mva)
 
-    if IsValid(bot.TPage) then
-        bot:SetEyeAngles((bot.TPage:GetPos() - bot:GetShootPos()):Angle()) --[[+ bot:GetViewPunchAngles()]]
+    if controller.LookAtTime < CurTime() then
+        controller.LookAt = Angle(math.random(-5, 5), math.random(-45, 45), 0)
+        controller.LookAtTime = CurTime() + math.Rand(0.9, 1.3)
+    end
+
+    local addang = controller.LookAt + (AngleRand() * 0.01)
+
+    if IsValid(bot.TPage) and bot.TPage:GetPos():DistToSqr(bot:GetPos()) <= 160000 then
+        bot:SetEyeAngles(LerpAngle(FrameTime() * 7, bot:EyeAngles(), (bot.TPage:GetPos() - bot:GetShootPos()):Angle() + (AngleRand() * 0.02))) --[[+ bot:GetViewPunchAngles()]]
         return
     else
-        local ang = LerpAngle(FrameTime() * 8, bot:EyeAngles(), mva)
+        local lerp = 7
+        local ang = Angle(0, 0, 0)
+
         if bot.SNB then
-            ang = LerpAngle(FrameTime() * 5, bot:EyeAngles(), (bot:EyePos() - ghost:GetPos()):Angle()) -- (bot:EyePos() - slender:GetPos()):Angle() + Angle(0, 180, 0)
+            lerp = 5
+            ang = Angle(0, (bot:EyePos() - ghost:GetPos()):Angle().y, 0)
+        else
+            ang = mva
         end
+
+        ang = LerpAngle(FrameTime() * lerp, bot:EyeAngles(), ang + addang)
         bot:SetEyeAngles(Angle(ang.p, ang.y, 0))
     end
 end
+
+concommand.Add("leadbot_slender", function(ply)
+    if !ply:Alive() then ply:Spawn() end
+
+    local ent = ents.FindByClass("slendy")[1]
+    if IsValid(ent) then
+        ent:Remove()
+    end
+
+    ply:SetTeam(TEAM_SLENDER)
+    gmod.GetGamemode().LastSlender = ply
+    game.GetWorld():SetDTEntity(2, ply)
+    ply:CollisionRulesChanged()
+    ply:Spawn()
+end)
