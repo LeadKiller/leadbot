@@ -79,6 +79,10 @@ function LeadBot.PlayerMove(bot, cmd, mv)
 
     local controller = bot.ControllerBot
 
+    if IsValid(bot:GetAutoPilot()) then
+        autopilot.Interrupt(bot)
+    end
+
     if !IsValid(controller) then
         bot.ControllerBot = ents.Create("leadbot_navigator")
         bot.ControllerBot:Spawn()
@@ -281,7 +285,7 @@ end
 -- fix for timers
 
 hook.Add("Initialize", "LeadBot_TimerFix", function()
-    function DelayNewTarget(ply,delay)
+    function DelayNewTarget(ply, delay)
         ply:SetTarget(NULL, true)
 
         timer.Create("ass_plytargetdelay" .. ply:EntIndex(), delay or ConVars.Server.newTargetDelay:GetFloat(), 1, function()
