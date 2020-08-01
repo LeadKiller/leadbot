@@ -12,7 +12,7 @@ LeadBot.NoFlashlight = true
 
 function LeadBot.StartCommand(bot, cmd)
     local controller = bot.ControllerBot
-    if !IsValid(controller) then return end
+    if !IsValid(controller) or bot:IsFrozen() then return end
     local buttons = (controller.SprintTime and controller.SprintTime > CurTime() and IN_SPEED) or 0
     local botWeapon = bot:GetActiveWeapon()
     local target = controller.Target
@@ -75,6 +75,8 @@ function LeadBot.Think()
 end
 
 function LeadBot.PlayerMove(bot, cmd, mv)
+    if bot:IsFrozen() then return end
+
     local controller = bot.ControllerBot
 
     if !IsValid(controller) then
