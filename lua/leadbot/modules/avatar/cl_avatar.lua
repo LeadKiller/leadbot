@@ -2,10 +2,12 @@
 
 local meta = FindMetaTable("Panel")
 local oldfunc = meta.SetPlayer
+local disabledGamemodes = {}
+disabledGamemodes["assassins"] = true
 
 function meta:SetPlayer(ply, size)
     if !IsValid(ply) or !ply:IsPlayer() then return end
-    if engine.ActiveGamemode() == "assassins" then return oldfunc(self, ply, size) end
+    if disabledGamemodes[engine.ActiveGamemode()] then return oldfunc(self, ply, size) end
 
     if ply:IsBot() then
         function self:Paint(w, h)
