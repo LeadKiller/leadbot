@@ -11,6 +11,7 @@ Download LeadBot from [here](https://github.com/LeadKiller/leadbot/archive/maste
  - [DOGFIGHT: Arcade Assault](https://steamcommunity.com/sharedfiles/filedetails/?id=288399121)
  - [Hover Gear Legacy](https://steamcommunity.com/sharedfiles/filedetails/?id=104516229)
  - [Zombie Plague](https://github.com/Nicholas-Fuchs/zombieplague)
+ - [Assassins](https://steamcommunity.com/sharedfiles/filedetails/?id=834782562)
  - [Team Fortress 2 Gamemode](https://github.com/moddage/tf2-gamemode) (Integrated into the gamemode)
  - [Cinema](https://steamcommunity.com/workshop/filedetails/?id=143148073)
  - [Quake 3](https://steamcommunity.com/sharedfiles/filedetails/?id=160207505)
