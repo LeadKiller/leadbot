@@ -12,8 +12,10 @@ local NA = Angle(0, 0, 0)
 local scroll = 0
 local lastsend = CurTime()
 local tp_Gamemodes = {}
+local NoAFKCamera = {}
 tp_Gamemodes["sandbox"] = true
 tp_Gamemodes["darkestdays"] = true
+NoAFKCamera["assassins"] = true
 
 hook.Add("CreateMove", "LeadBot_AFK", function(cmd)
     local ply = LocalPlayer()
@@ -69,7 +71,7 @@ local ang
 hook.Add("CalcView", "LeadBot_AFK", function(ply, origin, angles)
     if !ang then ang = angles end
 
-    if ply:ShouldDrawLocalPlayer() or !ply:GetNWBool("LeadBot_AFK") then return end
+    if ply:ShouldDrawLocalPlayer() or !ply:GetNWBool("LeadBot_AFK") or NoAFKCamera[engine.ActiveGamemode()] then return end
 
     local view = {}
 
@@ -99,7 +101,7 @@ end)
 hook.Add("CalcViewModelView", "LeadBot_AFK", function(wep, vm, oldpos, oldang, newpos, newang)
     local ply = LocalPlayer()
 
-    if ply:ShouldDrawLocalPlayer() or !ply:GetNWBool("LeadBot_AFK") then return end
+    if ply:ShouldDrawLocalPlayer() or !ply:GetNWBool("LeadBot_AFK") or NoAFKCamera[engine.ActiveGamemode()] then return end
 
     if wep.GetViewModelPosition then
         newpos, newang = wep:GetViewModelPosition(newpos, newang)
