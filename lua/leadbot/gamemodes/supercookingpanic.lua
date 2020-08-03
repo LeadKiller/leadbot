@@ -1,5 +1,6 @@
 --[[GAMEMODE CONFIGURATION START]]--
 
+LeadBot.RespawnAllowed = false
 LeadBot.Gamemode = "supercookingpanic"
 LeadBot.TeamPlay = true
 LeadBot.LerpAim = true
