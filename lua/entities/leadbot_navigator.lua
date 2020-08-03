@@ -26,6 +26,10 @@ function ENT:Initialize()
 	self.goalPos = Vector(0, 0, 0)
 	self.strafeAngle = 0
 	self.nextStuckJump = 0
+
+	if LeadBot.AddControllerOverride then
+		LeadBot.AddControllerOverride(self)
+	end
 end
 
 function ENT:ChasePos()
