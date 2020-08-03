@@ -1,7 +1,7 @@
 hook.Add("HUDPaint", "AFKT", function()
     if LocalPlayer():GetNWBool("LeadBot_AFK") then
         local aa = 200 + math.sin(CurTime() * 5) * 50
-        draw.SimpleTextOutlined("You are currently AFK", "DermaLarge", ScrW() / 2, ScrH() / 1.7, Color(255, 255, 255, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM, 1,  Color(0, 0, 0,255))
+        draw.SimpleTextOutlined("You are currently AFK", "DermaLarge", ScrW() / 2, ScrH() / 1.7, Color(255, 255, 255, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM, 1,  Color(0, 0, 0, 255))
         draw.SimpleTextOutlined("Jump to get out of AFK", "DermaLarge", ScrW() / 2, ScrH() / 1.6, Color(255, 255, 255, aa), TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM, 1, Color(0, 0, 0, aa))
     end
 end)
@@ -64,9 +64,8 @@ hook.Add("InputMouseApply", "LeadBot_AFK", function(cmd)
     end
 end)
 
--- looked pretty bad :(
-
 local ang
+local lerp = 0
 
 hook.Add("CalcView", "LeadBot_AFK", function(ply, origin, angles)
     if !ang then ang = angles end
@@ -75,11 +74,17 @@ hook.Add("CalcView", "LeadBot_AFK", function(ply, origin, angles)
 
     local view = {}
 
-    if tp then
-        origin = ply:EyePos()
+    if tp or lerp ~= 0 then
+        if tp then
+            lerp = math.Clamp(lerp + FrameTime() * 5, 0, 1)
+        else
+            lerp = math.Clamp(lerp - FrameTime() * 5, 0, 1)
+        end
+
+        local pos = ply:EyePos()
         local trace = util.TraceHull({
-            start = origin + NA:Forward() * -5,
-            endpos = origin + NA:Forward() * (-75 - scroll),
+            start = pos + NA:Forward() * Lerp(lerp, 0, -5),
+            endpos = pos + NA:Forward() * Lerp(lerp, 0, -75 - scroll),
             filter = ply,
             mins = Vector(-8, -8, -8),
             maxs = Vector(8, 8, 8),
