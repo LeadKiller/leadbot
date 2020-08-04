@@ -30,7 +30,7 @@ end)
 local voice = Material("voice/icntlk_pl")
 -- is there no way to force this on?
 hook.Add("PostPlayerDraw", "LeadBot_VoiceIcon", function(ply)
-    if !IsValid(ply) or !ply:IsPlayer() or !ply:IsBot() or !IsValid(ply.ChattingS) then return end
+    if !IsValid(ply) or !ply:IsPlayer() or !ply:IsBot() or !IsValid(ply.ChattingS) or !GetConVar("mp_show_voice_icons"):GetBool() then return end
 
     local ang = EyeAngles()
     local pos = ply:GetPos() + ply:GetCurrentViewOffset() + Vector(0, 0, 14)
