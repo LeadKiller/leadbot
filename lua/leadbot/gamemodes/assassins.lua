@@ -14,16 +14,6 @@ function LeadBot.StartCommand(bot, cmd)
     local controller = bot.ControllerBot
     if !IsValid(controller) or bot:IsFrozen() then return end
     local buttons = (controller.SprintTime and controller.SprintTime > CurTime() and IN_SPEED) or 0
-    local botWeapon = bot:GetActiveWeapon()
-    local target = controller.Target
-
-    if IsValid(botWeapon) and (botWeapon:Clip1() == 0 or !IsValid(target) and botWeapon:Clip1() <= botWeapon:GetMaxClip1() / 2) then
-        buttons = buttons + IN_RELOAD
-    end
-
-    if IsValid(target) and math.random(2) == 1 then
-        buttons = buttons + IN_ATTACK
-    end
 
     if bot:GetMoveType() == MOVETYPE_LADDER then
         local pos = controller.goalPos
@@ -51,7 +41,6 @@ function LeadBot.StartCommand(bot, cmd)
         buttons = buttons + IN_DUCK
     end
 
-    bot:SelectWeapon((IsValid(controller.Target) and controller.Target:GetPos():DistToSqr(controller:GetPos()) < 129000 and "weapon_shotgun") or "weapon_smg1")
     cmd:ClearButtons()
     cmd:ClearMovement()
     cmd:SetButtons(buttons)
@@ -63,12 +52,6 @@ function LeadBot.Think()
             if bot.NextSpawnTime and !bot:Alive() and bot.NextSpawnTime < CurTime() then
                 bot:SpawnForRound()
                 return
-            end
-
-            local wep = bot:GetActiveWeapon()
-            if IsValid(wep) then
-                local ammoty = wep:GetPrimaryAmmoType() or wep.Primary.Ammo
-                bot:SetAmmo(wep.Primary.DefaultClip, ammoty)
             end
         end
     end
@@ -113,15 +96,21 @@ function LeadBot.PlayerMove(bot, cmd, mv)
         controller.Target = bot:GetTarget()
     end
 
-    if (controller.TargetTime and controller.TargetTime < CurTime()) or (bot.NextSpawnTime and bot.NextSpawnTime + 1 > CurTime()) or !IsValid(controller.Target) or controller.Target:Health() < 1 or !controller.Target:Alive() then
+    if (controller.TargetTime and controller.TargetTime < CurTime()) or (bot.NextSpawnTime and bot.NextSpawnTime + 1 > CurTime()) or !IsValid(controller.Target) or controller.Target:Health() < 1 or (controller.Target.Alive and !controller.Target:Alive() or !controller.Target.Alive) then
         controller.Target = nil
         controller.TargetTime = nil
     end
 
     local dt = util.QuickTrace(bot:EyePos(), bot:GetForward() * 45, bot)
 
-    if IsValid(dt.Entity) and dt.Entity:GetClass() == "prop_door_rotating" then
-        dt.Entity:Fire("OpenAwayFrom", bot, 0)
+    if IsValid(dt.Entity) then
+        local class = dt.Entity:GetClass()
+        if class == "prop_door_rotating" then
+            dt.Entity:Fire("OpenAwayFrom", bot, 0)
+        elseif class == "func_breakable_surf" and !dt.Entity.Breaking then
+            dt.Entity.Breaking = true
+            hook.Call("PlayerUse", gmod.GetGamemode(), bot, dt.Entity)
+        end
     end
 
     if !IsValid(controller.Target) and (!controller.PosGen or bot:GetPos():DistToSqr(controller.PosGen) < 1000 or controller.LastSegmented < CurTime()) then
