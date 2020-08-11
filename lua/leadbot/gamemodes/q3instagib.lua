@@ -2,7 +2,7 @@
 
 LeadBot.RespawnAllowed = true
 LeadBot.SetModel = false
-LeadBot.Gamemode = "q3ffa"
+LeadBot.Gamemode = "q3instagib"
 LeadBot.TeamPlay = false
 LeadBot.LerpAim = false
 LeadBot.NoSprint = true
