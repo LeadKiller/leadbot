@@ -16,6 +16,7 @@ local NoAFKCamera = {}
 tp_Gamemodes["sandbox"] = true
 tp_Gamemodes["darkestdays"] = true
 NoAFKCamera["assassins"] = true
+NoAFKCamera["cavefight"] = true
 
 hook.Add("CreateMove", "LeadBot_AFK", function(cmd)
     local ply = LocalPlayer()
