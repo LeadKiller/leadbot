@@ -72,15 +72,15 @@ hook.Add("PlayerSpawn", "leadbot_spawn", function(ply)
     timer.Simple(0.1, function()
         if ply.LeadBot and ROUND.State ~= ROUND_ONGOING then
             ply.LastGunPrice = 0
-            ply:SetNoCollideWithTeammates(true)
-            ply:SetAvoidPlayers(false)
+            --[[ply:SetNoCollideWithTeammates(true)
+            ply:SetAvoidPlayers(false)]]
             ply:Give(SETTINGS.StartWeapon)
         end
     end)
 end)
 
 hook.Add("nzu_GameStarted", "leadbot_Restart", function()
-    for k, v in pairs(player.GetBots()) do
+    --[[for k, v in pairs(player.GetBots()) do
     local ply = v
     timer.Simple(0.1, function()
         if ply.LeadBot then
@@ -91,23 +91,23 @@ hook.Add("nzu_GameStarted", "leadbot_Restart", function()
             ply:Give(SETTINGS.StartWeapon)
         end
     end)
-    end
+    end]]
 end)
 
 hook.Add("nzu_PlayerDowned", "leadbot_Downed", function(bot)
-	if bot.LeadBot then
-		LeadBot.TalkToMe(bot, "downed")
-	end
+    if bot.LeadBot then
+        LeadBot.TalkToMe(bot, "downed")
+    end
 end)
 
 function LeadBot.Think()
     for _, bot in pairs(player.GetBots()) do
         if bot.LeadBot then
-            if bot.LeadBot and !bot:Alive() and ROUND.State ~= ROUND_ONGOING then bot:Spawn() end
+            if bot.LeadBot and !bot:Alive() then bot:ReadyUp() end --and ROUND.State == ROUND_ONGOING then round:Spawn() end
             if IsValid(bot:GetActiveWeapon()) then
                 local wep = bot:GetActiveWeapon()
                 local ammoty = wep:GetPrimaryAmmoType() or wep.Primary.Ammo
-                print(wep:Clip1())
+
                 bot:SetAmmo(999, ammoty)
                 if !wep.Cocked and wep.CockAfterShot then
                     wep:CockLogic()
@@ -133,6 +133,10 @@ function LeadBot.StartCommand(bot, cmd)
         buttons = buttons + IN_USE
     end
 
+    if bot:GetMoveType() == MOVETYPE_LADDER and math.random(2) == 1 then
+        buttons = buttons + IN_JUMP
+    end
+
     if IsValid(bot.TargetEnt) and math.random(2) == 1 then
         buttons = buttons + IN_ATTACK
     end
@@ -143,6 +147,15 @@ function LeadBot.StartCommand(bot, cmd)
 end
 
 function LeadBot.PlayerMove(bot, cmd, mv)
+    local controller = bot.ControllerBot
+
+    if !IsValid(controller) then
+        bot.ControllerBot = ents.Create("leadbot_navigator")
+        bot.ControllerBot:Spawn()
+        bot.ControllerBot:SetOwner(bot)
+        controller = bot.ControllerBot
+    end
+
     if bot.ControllerBot:GetPos() ~= bot:GetPos() then
         bot.ControllerBot:SetPos(bot:GetPos())
     end
@@ -168,14 +181,14 @@ function LeadBot.PlayerMove(bot, cmd, mv)
         if IsValid(weapon) and !v:IsPlayer() and v:GetPos():Distance(bot:GetPos()) < 180 then
             local class = v:GetClass()
             local data = v:GetDoorData()
-			--[[if v:IsPlayer() and v:GetPos():Distance(bot:GetPos()) < 320 and v:GetIsDowned() then
-				bot.UseTarget = v
-            else]]if v.Base == "nzu_zombie_base" then -- Zombie
+            if v.Base == "nzu_zombie_base" then -- Zombie
                 local targetpos = v:EyePos() or v:GetPos()
                 if util.TraceLine({start = bot:GetShootPos(), endpos = targetpos, filter = function( ent ) return ent == v end}).Entity == v then
                     bot.TargetEnt = v
                 end
-			elseif plyDis < 300 then
+            elseif v:IsPlayer() and v:GetPos():Distance(bot:GetPos()) < 320 and v:GetIsDowned() then
+                bot.UseTarget = v
+            elseif plyDis < 300 then
                 if istable(data) and data.Price <= bot:GetPoints() then -- Door
                     bot.UseEnt = v
                 elseif ((class == "nzu_barricade" and v:GetCanBeRepaired()) or (class == "nzu_wallbuy" and v:GetPrice() <= bot:GetPoints() and weapon:GetClass() ~= v:GetWeaponClass() and bot.LastGunPrice <= v:GetPrice())) and !bot.TargetEnt then -- Misc
@@ -191,16 +204,26 @@ function LeadBot.PlayerMove(bot, cmd, mv)
 
     mv:SetForwardSpeed(1200)
 
-    if !IsValid(bot.TargetEnt) and !IsValid(bot.UseEnt) and (!bot.botPos or bot:GetPos():Distance(bot.botPos) < 60 or math.abs(bot.LastSegmented - CurTime()) > 10) then
+    if controller.NextCenter > CurTime() then
+        if controller.strafeAngle == 1 then
+            mv:SetSideSpeed(1500)
+        elseif controller.strafeAngle == 2 then
+            mv:SetSideSpeed(-1500)
+        else
+            mv:SetForwardSpeed(-1500)
+        end
+    end
+
+    if !IsValid(bot.TargetEnt) and !IsValid(bot.UseEnt) and (!controller.PosGen or bot:GetPos():Distance(controller.PosGen) < 60 or math.abs(controller.LastSegmented- CurTime()) > 10) then
         -- find a random spot on the map, and in 10 seconds do it again!
         if strategy == 1 then
-            bot.botPos = bot.ControllerBot:FindSpot("random", {radius = 12500})
-            bot.LastSegmented = CurTime()
+            controller.PosGen = bot.ControllerBot:FindSpot("random", {radius = 12500})
+            controller.LastSegmented= CurTime()
         else
-            bot.botPos = bot.FollowPly:GetPos()
+            controller.PosGen = bot.FollowPly:GetPos() + VectorRand() * 248
         end
     elseif IsValid(bot.UseEnt) and !IsValid(bot.TargetEnt) then
-        bot.botPos = bot.UseEnt:GetPos()
+        controller.PosGen = bot.UseEnt:GetPos()
 
         local class = bot.UseEnt:GetClass()
 
@@ -222,7 +245,7 @@ function LeadBot.PlayerMove(bot, cmd, mv)
         end
     elseif IsValid(bot.TargetEnt) then
         local distance = bot.TargetEnt:GetPos():Distance(bot:GetPos())
-        bot.botPos = bot.TargetEnt:GetPos()
+        controller.PosGen = bot.TargetEnt:GetPos()
 
         -- back up if the target is really close
         -- TODO: find a random spot rather than trying to back up into what could just be a wall
@@ -231,7 +254,7 @@ function LeadBot.PlayerMove(bot, cmd, mv)
         end
     end
 
-    bot.ControllerBot.PosGen = bot.botPos
+    bot.ControllerBot.PosGen = controller.PosGen
 
     if bot.ControllerBot.P then
         bot.LastPath = bot.ControllerBot.P:GetAllSegments()
@@ -241,13 +264,22 @@ function LeadBot.PlayerMove(bot, cmd, mv)
         return
     end
 
-    if bot.CurSegment ~= 2 and !table.EqualValues( bot.LastPath, bot.ControllerBot.P:GetAllSegments() ) then
+    --[[if bot.CurSegment ~= 2 and !table.EqualValues( bot.LastPath, bot.ControllerBot.P:GetAllSegments() ) then
         bot.CurSegment = 2
-    end
+    end]]
 
-    if !bot.LastPath then return end
-    local curgoal = bot.LastPath[bot.CurSegment]
-    if !curgoal then return end
+    local segments = controller.P:GetAllSegments()
+
+    if !segments then return end
+
+    local cur_segment = controller.cur_segment
+    local curgoal = segments[cur_segment]
+
+    -- got nowhere to go, why keep moving?
+    if !curgoal then
+        mv:SetForwardSpeed(0)
+        return
+    end
 
     -- think every step of the way!
     if segments[cur_segment + 1] and Vector(bot:GetPos().x, bot:GetPos().y, 0):DistToSqr(Vector(curgoal.pos.x, curgoal.pos.y)) < 100 then
@@ -256,14 +288,16 @@ function LeadBot.PlayerMove(bot, cmd, mv)
     end
 
     local goalpos = curgoal.pos
-    local vel = bot:GetVelocity()
-    vel = Vector(math.floor(vel.x, 2), math.floor(vel.y, 2), 0)
 
-    if vel == Vector(0, 0, 0) or controller.NextCenter > CurTime() then
-        curgoal.pos = curgoal.area:GetCenter()
-        goalpos = segments[controller.cur_segment - 1].area:GetCenter()
-        if vel == Vector(0, 0, 0) then
-            controller.NextCenter = CurTime() + 0.25
+    if bot:GetVelocity():Length2DSqr() <= 225 then
+        if controller.NextCenter < CurTime() then
+            controller.strafeAngle = ((controller.strafeAngle == 1 and 2) or 1)
+            controller.NextCenter = CurTime() + math.Rand(0.3, 0.65)
+        elseif controller.nextStuckJump < CurTime() then
+            if !bot:Crouching() then
+                controller.NextJump = 0
+            end
+            controller.nextStuckJump = CurTime() + math.Rand(1, 2)
         end
     end
 
@@ -272,19 +306,21 @@ function LeadBot.PlayerMove(bot, cmd, mv)
     ------------------------------
 
     local lerp = 1
+    local lerp = FrameTime() * math.random(8, 10)
+    local lerpc = FrameTime() * 8
 
-    mv:SetMoveAngles(LerpAngle(lerp, mv:GetMoveAngles(), ((goalpos + Vector(0, 0, 65)) - bot:GetShootPos()):Angle()))
+    mv:SetMoveAngles(LerpAngle(lerpc, mv:GetMoveAngles(), ((goalpos + Vector(0, 0, 65)) - bot:GetShootPos()):Angle()))
 
     if IsValid(bot.TargetEnt) and bot:GetEyeTrace().Entity ~= bot.TargetEnt then
         local shouldvegoneforthehead = bot.TargetEnt:GetBonePosition(bot.TargetEnt:LookupBone("ValveBiped.Bip01_Head1")) or bot.TargetEnt:EyePos()
-        local cang = --[[LerpAngle(lerp, bot:EyeAngles(), ]](shouldvegoneforthehead - bot:GetShootPos()):Angle() --)
+        local cang = LerpAngle(lerp, bot:EyeAngles(), (shouldvegoneforthehead - bot:GetShootPos()):Angle())
         bot:SetEyeAngles(Angle(cang.p, cang.y, 0)) --[[+ bot:GetViewPunchAngles()]]
         return
     elseif bot:GetPos():Distance(goalpos) > 20 then
         local ang2 = ((goalpos + Vector(0, 0, 65)) - bot:GetShootPos()):Angle()
-        local ang = LerpAngle(lerp, mv:GetMoveAngles(), ang2)
+        local ang = LerpAngle(lerpc, mv:GetMoveAngles(), ang2)
         --local cang = LerpAngle(lerpc, bot:EyeAngles(), ang2)
-        bot:SetEyeAngles(Angle(ang2.p, ang2.y, 0))
+        bot:SetEyeAngles(LerpAngle(lerp, bot:EyeAngles(), Angle(ang2.p, ang2.y, 0)))
         mv:SetMoveAngles(ang)
     end
 end
