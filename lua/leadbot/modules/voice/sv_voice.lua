@@ -24,7 +24,7 @@ LeadBot.VoicePreset["nick"]["downed"] = {"player/survivor/voice/gambler/ledgehan
 
 -- TODO: rest of survivors (ellis bill zoey etc)
 
-local convar = CreateConVar("leadbot_voice", "css", {FCVAR_ARCHIVE}, "Voice Preset.\nOptions are: \n- \"" .. table.concat(table.GetKeys(LeadBot.VoicePreset), "\"\n- \"") .. "\"")
+local convar = CreateConVar("leadbot_voice", "random", {FCVAR_ARCHIVE}, "Voice Preset.\nOptions are: \n- \"random\"\n- \"" .. table.concat(table.GetKeys(LeadBot.VoicePreset), "\"\n- \"") .. "\"")
 
 function LeadBot.TalkToMe(ply, type)
     if !ply:IsLBot(true) then return end
@@ -32,9 +32,17 @@ function LeadBot.TalkToMe(ply, type)
     local hear = {}
     local sound = ""
     local selectedvoice = "css"
+    local voice = convar:GetString()
 
-    if LeadBot.VoicePreset[convar:GetString()] then
-        selectedvoice = convar:GetString()
+    if voice == "random" then
+        if !ply.LeadBot_Voice then
+            local _, selectedplyvoice = table.Random(LeadBot.VoicePreset)
+            ply.LeadBot_Voice = selectedplyvoice
+        end
+
+        selectedvoice = ply.LeadBot_Voice
+    elseif LeadBot.VoicePreset[voice] then
+        selectedvoice = voice
     end
 
     for k, v in pairs(player.GetAll()) do
