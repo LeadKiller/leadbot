@@ -9,7 +9,7 @@ function meta:SetPlayer(ply, size)
     if !IsValid(ply) or !ply:IsPlayer() then return end
     if disabledGamemodes[engine.ActiveGamemode()] then return oldfunc(self, ply, size) end
 
-    if ply:IsBot() then
+    if ply:IsBot() and ply:GetNWString("LeadBot_AvatarModel", "none") ~= "none" then
         function self:Paint(w, h)
             draw.RoundedBox(0, 0, 0, w, h, Color(255, 255, 255))
         end
