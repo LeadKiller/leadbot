@@ -90,6 +90,8 @@ function LeadBot.PlayerHurt(ply, bot, hp, dmg)
                     hidden:Pounce()
                 end
 
+                hiddenvisibility = hiddenvisibility + 10
+
                 if bot.LeadBot then
                     bot.ControllerBot.Target = hidden
                     bot.ControllerBot.ForgetTarget = CurTime() + 1
@@ -97,7 +99,8 @@ function LeadBot.PlayerHurt(ply, bot, hp, dmg)
             end
         else
             controller.LookAtTime = CurTime() + 2
-            controller.LookAt = ((bot:GetPos() + VectorRand() * 128) - ply:GetPos()):Angle()
+            controller.LookAt = ((bot:GetPos() + VectorRand() * 48) - ply:GetPos()):Angle()
+            controller.LastHidden = CurTime() + 0.3
             hiddenvisibility = hiddenvisibility + 15
         end
     end
@@ -256,7 +259,7 @@ function LeadBot.PlayerMove(bot, cmd, mv)
                     end
                 end
 
-                controller.LastHidden = CurTime() + math.Rand(1, 1.5)
+                controller.LastHidden = CurTime() + math.Rand(0.8, 1.2)
             end
         elseif !controller.NoTarget or controller.NoTarget < CurTime() then
             --[[local closest = nil
