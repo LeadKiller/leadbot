@@ -14,6 +14,7 @@ Download LeadBot from [here](https://github.com/LeadKiller/leadbot/archive/maste
  - [Assassins](https://steamcommunity.com/sharedfiles/filedetails/?id=834782562)
  - [Super Cooking Panic](https://steamcommunity.com/sharedfiles/filedetails/?id=2180715133)
  - [Cave Fight](https://github.com/Tripperful/cavefight/)
+ - [The Hidden](https://steamcommunity.com/sharedfiles/filedetails/?id=443458575)
  - [Team Fortress 2 Gamemode](https://github.com/moddage/tf2-gamemode) (Integrated into the gamemode)
  - [Cinema](https://steamcommunity.com/workshop/filedetails/?id=143148073)
  - [Quake 3](https://steamcommunity.com/sharedfiles/filedetails/?id=160207505)
