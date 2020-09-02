@@ -19,6 +19,11 @@ function meta:SetPlayer(ply, size)
         -- background.Texture = Material("entities/monster_scientist.png")
 
         function background:Paint(w, h)
+            if !ispanel(self:GetParent()) then
+                self:Remove()
+                return
+            end
+
             draw.RoundedBox(0, 0, 0, w, h, Color(255, 255, 255))
 
             --[[surface.SetMaterial(self.Texture)
@@ -36,6 +41,8 @@ function meta:SetPlayer(ply, size)
             ply.AvatarCycle = math.Rand(0.025, (ply.AvatarSeq == "death_04" and 0.06) or (ply.AvatarSeq == "death_01" and 0.3) or 0.1)
         end
 
+        local playermodel = ply:GetNWString("LeadBot_AvatarModel", ply:GetModel())
+
         function model:LayoutEntity(ent)
             if !ispanel(self:GetParent()) then
                 self:Remove()
@@ -50,7 +57,7 @@ function meta:SetPlayer(ply, size)
                 ent.Player = self.Player
                 function ent:GetPlayerColor()
                     if !IsValid(self.Player) then return Vector(1, 1, 1) end
-                    return self.Player:GetPlayerColor()
+                    return self.Player:GetNWVector("LeadBot_AvatarColor", self.Player:GetPlayerColor())
                 end
             end
 
@@ -65,8 +72,8 @@ function meta:SetPlayer(ply, size)
 
             self:SetColor(Color(255, 255, 255, alpha))
 
-            if self.ModelCache ~= self.Player:GetModel() then
-                self:SetModel(self.Player:GetModel())
+            if self.ModelCache ~= playermodel then
+                self:SetModel(playermodel)
 
                 ent = self:GetEntity()
 
