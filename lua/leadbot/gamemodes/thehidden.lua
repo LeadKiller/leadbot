@@ -99,8 +99,12 @@ function LeadBot.PlayerHurt(ply, bot, hp, dmg)
             end
         else
             controller.LookAtTime = CurTime() + 2
-            controller.LookAt = ((bot:GetPos() + VectorRand() * 48) - ply:GetPos()):Angle()
-            controller.LastHidden = CurTime() + 0.3
+            controller.LookAt = ((bot:GetPos() + VectorRand() * 8) - ply:GetPos()):Angle()
+            controller.LastHidden = CurTime() + 0.5
+            if math.random(3) == 1 then
+                controller.Target = bot
+                controller.ForgetTarget = CurTime() + 0.25
+            end
             hiddenvisibility = hiddenvisibility + 15
         end
     end
