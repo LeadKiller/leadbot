@@ -437,7 +437,7 @@ function LeadBot.PlayerMove(bot, cmd, mv)
         return
     else
         if controller.LookAtTime > CurTime() then
-            local ang = LerpAngle(lerpc, bot:EyeAngles(), controller.LookAt)
+            local ang = LerpAngle(FrameTime() * 6, bot:EyeAngles(), controller.LookAt)
             bot:SetEyeAngles(Angle(ang.p, ang.y, 0))
         else
             local ang = LerpAngle(lerpc, bot:EyeAngles(), mva)
