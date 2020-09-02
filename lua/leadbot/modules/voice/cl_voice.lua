@@ -39,6 +39,7 @@ hook.Add("PostPlayerDraw", "LeadBot_VoiceIcon", function(ply)
 
     cam.Start3D2D(pos, ang, 1)
         surface.SetMaterial(voice)
+        surface.SetDrawColor(255, 255, 255)
         surface.DrawTexturedRect(-8, -8, 16, 16)
     cam.End3D2D()
 end)
