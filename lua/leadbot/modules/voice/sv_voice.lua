@@ -1,6 +1,55 @@
 util.AddNetworkString("botVoiceStart")
 
 LeadBot.VoicePreset = {}
+LeadBot.VoiceModels = {}
+
+local convar = CreateConVar("leadbot_voice", "random", {FCVAR_ARCHIVE}, "Voice Preset.\nOptions are: \n- \"random\"\n- \"" .. table.concat(table.GetKeys(LeadBot.VoicePreset), "\"\n- \"") .. "\"")
+
+function LeadBot.TalkToMe(ply, type)
+    if !ply:IsLBot(true) then return end
+
+    local hear = {}
+    local sound = ""
+    local selectedvoice = "metropolice"
+    local voice = convar:GetString()
+
+    if voice == "random" then
+        if !ply.LeadBot_Voice then
+            local model = ply:Nick()
+            if LeadBot.VoiceModels[model] then
+                ply.LeadBot_Voice = LeadBot.VoiceModels[model]
+            else
+                local _, selectedplyvoice = table.Random(LeadBot.VoicePreset)
+                ply.LeadBot_Voice = selectedplyvoice
+            end
+        end
+
+        if !LeadBot.VoicePreset[ply.LeadBot_Voice] then
+            ply.LeadBot_Voice = "metropolice"
+        end
+
+        selectedvoice = ply.LeadBot_Voice
+    elseif LeadBot.VoicePreset[voice] then
+        selectedvoice = voice
+    end
+
+    for k, v in pairs(player.GetAll()) do
+        if hook.Call("PlayerCanHearPlayersVoice", gmod.GetGamemode(), v, ply) then
+            table.insert(hear, v)
+        end
+    end
+
+    if type and LeadBot.VoicePreset[selectedvoice][type] then
+        sound = table.Random(LeadBot.VoicePreset[selectedvoice][type])
+    end
+
+    net.Start("botVoiceStart")
+        net.WriteEntity(ply)
+        net.WriteString(sound)
+    net.Send(hear)
+end
+
+-- Valve Games
 
 if IsMounted("cstrike") then
     LeadBot.VoicePreset["css"] = {}
@@ -46,39 +95,75 @@ LeadBot.VoicePreset["metropolice"]["join"] = {"npc/metropolice/vo/lookingfortrou
 LeadBot.VoicePreset["metropolice"]["taunt"] = {"npc/metropolice/vo/finalverdictadministered.wav", "npc/metropolice/vo/firstwarningmove.wav", "npc/metropolice/vo/isaidmovealong.wav", "npc/metropolice/vo/nowgetoutofhere.wav", "npc/metropolice/vo/pickupthecan2.wav", "npc/metropolice/vo/pickupthecan3.wav", "npc/metropolice/vo/putitinthetrash1.wav", "npc/metropolice/vo/putitinthetrash2.wav", "npc/metropolice/vo/suspectisbleeding.wav", "npc/metropolice/vo/thisisyoursecondwarning.wav"}
 LeadBot.VoicePreset["metropolice"]["pain"] = {"npc/metropolice/vo/11-99officerneedsassistance.wav", "npc/metropolice/vo/wehavea10-108.wav", "npc/metropolice/vo/runninglowonverdicts.wav", "npc/metropolice/pain4.wav"}
 
-local convar = CreateConVar("leadbot_voice", "random", {FCVAR_ARCHIVE}, "Voice Preset.\nOptions are: \n- \"random\"\n- \"" .. table.concat(table.GetKeys(LeadBot.VoicePreset), "\"\n- \"") .. "\"")
+-- Player Config
 
-function LeadBot.TalkToMe(ply, type)
-    if !ply:IsLBot(true) then return end
+LeadBot.VoiceModels["Alyx Vance"] = "alyx"
+LeadBot.VoiceModels["Isaac Kleiner"] = "male"
+LeadBot.VoiceModels["Dr. Wallace Breen"] = "male"
+LeadBot.VoiceModels["The G-Man"] = "male"
+LeadBot.VoiceModels["Odessa Cubbage"] = "male"
+LeadBot.VoiceModels["Eli Vance"] = "male"
+LeadBot.VoiceModels["Father Grigori"] = "grigori"
+LeadBot.VoiceModels["Judith Mossman"] = "female"
+LeadBot.VoiceModels["Barney Calhoun"] = "barney"
 
-    local hear = {}
-    local sound = ""
-    local selectedvoice = "metropolice"
-    local voice = convar:GetString()
+LeadBot.VoiceModels["Magnusson"] = "male"
 
-    if voice == "random" then
-        if !ply.LeadBot_Voice then
-            local _, selectedplyvoice = table.Random(LeadBot.VoicePreset)
-            ply.LeadBot_Voice = selectedplyvoice
-        end
+LeadBot.VoiceModels["American Soldier"] = "male"
+LeadBot.VoiceModels["German Soldier"] = "male"
 
-        selectedvoice = ply.LeadBot_Voice
-    elseif LeadBot.VoicePreset[voice] then
-        selectedvoice = voice
-    end
+LeadBot.VoiceModels["GIGN"] = "css"
+LeadBot.VoiceModels["Elite Crew"] = "css"
+LeadBot.VoiceModels["Artic Avengers"] = "css"
+LeadBot.VoiceModels["SEAL Team Six"] = "css"
+LeadBot.VoiceModels["GSG-9"] = "css"
+LeadBot.VoiceModels["SAS"] = "css"
+LeadBot.VoiceModels["Phoenix Connexion"] = "css"
+LeadBot.VoiceModels["Guerilla Warfare"] = "css"
+LeadBot.VoiceModels["Cohrt"] = "male"
 
-    for k, v in pairs(player.GetAll()) do
-        if hook.Call("PlayerCanHearPlayersVoice", gmod.GetGamemode(), v, ply) then
-            table.insert(hear, v)
-        end
-    end
+LeadBot.VoiceModels["Chell"] = "female"
 
-    if type and LeadBot.VoicePreset[selectedvoice][type] then
-        sound = table.Random(LeadBot.VoicePreset[selectedvoice][type])
-    end
+LeadBot.VoiceModels["Civil Protection"] = "metropolice"
+LeadBot.VoiceModels["Combine Soldier"] = "metropolice"
+LeadBot.VoiceModels["Combine Prison Guard"] = "metropolice"
+LeadBot.VoiceModels["Elite Combine Soldier"] = "metropolice"
+LeadBot.VoiceModels["Stripped Combine Soldier"] = "metropolice"
 
-    net.Start("botVoiceStart")
-        net.WriteEntity(ply)
-        net.WriteString(sound)
-    net.Send(hear)
-end
+LeadBot.VoiceModels["Zombie"] = "css"
+LeadBot.VoiceModels["Fast Zombie"] = "css"
+LeadBot.VoiceModels["Zombine"] = "css"
+LeadBot.VoiceModels["Corpse"] = "css"
+LeadBot.VoiceModels["Charple"] = "css"
+LeadBot.VoiceModels["Skeleton"] = "css"
+
+LeadBot.VoiceModels["Van"] = "male"
+LeadBot.VoiceModels["Ted"] = "male"
+LeadBot.VoiceModels["Joe"] = "male"
+LeadBot.VoiceModels["Eric"] = "male"
+LeadBot.VoiceModels["Art"] = "male"
+LeadBot.VoiceModels["Sandro"] = "male"
+LeadBot.VoiceModels["Mike"] = "male"
+LeadBot.VoiceModels["Vance"] = "male"
+LeadBot.VoiceModels["Erdin"] = "male"
+LeadBot.VoiceModels["Van"] = "male"
+LeadBot.VoiceModels["Ted"] = "male"
+LeadBot.VoiceModels["Joe"] = "male"
+LeadBot.VoiceModels["Eric"] = "male"
+LeadBot.VoiceModels["Art"] = "male"
+LeadBot.VoiceModels["Sandro"] = "male"
+LeadBot.VoiceModels["Mike"] = "male"
+LeadBot.VoiceModels["Vance"] = "male"
+LeadBot.VoiceModels["Erdin"] = "male"
+LeadBot.VoiceModels["Joey"] = "female"
+LeadBot.VoiceModels["Kanisha"] = "female"
+LeadBot.VoiceModels["Kim"] = "female"
+LeadBot.VoiceModels["Chau"] = "female"
+LeadBot.VoiceModels["Naomi"] = "female"
+LeadBot.VoiceModels["Lakeetra"] = "female"
+LeadBot.VoiceModels["Joey"] = "female"
+LeadBot.VoiceModels["Kanisha"] = "female"
+LeadBot.VoiceModels["Kim"] = "female"
+LeadBot.VoiceModels["Chau"] = "female"
+LeadBot.VoiceModels["Naomi"] = "female"
+LeadBot.VoiceModels["Lakeetra"] = "female"
