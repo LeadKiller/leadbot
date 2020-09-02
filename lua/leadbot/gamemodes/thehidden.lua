@@ -294,11 +294,11 @@ function LeadBot.PlayerMove(bot, cmd, mv)
             end
 
             table.sort(strat0, function(a, b)
-                return a:GetPos():DistToSqr(bot:GetPos()) <= b:GetPos():DistToSqr(bot:GetPos())
+                return a:GetPos():DistToSqr(bot:GetPos()) < b:GetPos():DistToSqr(bot:GetPos())
             end)
 
             table.sort(strat1, function(a, b)
-                return a:GetPos():DistToSqr(bot:GetPos()) <= b:GetPos():DistToSqr(bot:GetPos())
+                return a:GetPos():DistToSqr(bot:GetPos()) < b:GetPos():DistToSqr(bot:GetPos())
             end)
 
             table.Add(players, strat1)
