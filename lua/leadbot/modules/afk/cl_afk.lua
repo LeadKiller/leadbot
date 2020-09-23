@@ -51,6 +51,7 @@ hook.Add("CreateMove", "LeadBot_AFK", function(cmd)
 
         cmd:ClearButtons()
         cmd:ClearMovement()
+        cmd:SetImpulse(0)
 
         cmd:SetMouseX(0)
         cmd:SetMouseY(0)
