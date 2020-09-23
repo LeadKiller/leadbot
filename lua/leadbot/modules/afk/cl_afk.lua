@@ -65,6 +65,12 @@ hook.Add("InputMouseApply", "LeadBot_AFK", function(cmd)
     end
 end)
 
+hook.Add("HUDShouldDraw", "LeadBot_AFK", function(hud)
+    if hud == "CHudWeaponSelection" and LocalPlayer():GetNWBool("LeadBot_AFK") then
+        return false
+    end
+end)
+
 local ang
 local lerp = 0
 
