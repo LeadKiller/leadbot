@@ -16,7 +16,7 @@ Download LeadBot from [here](https://github.com/LeadKiller/leadbot/archive/maste
  - [Cave Fight](https://github.com/Tripperful/cavefight/)
  - [The Hidden](https://steamcommunity.com/sharedfiles/filedetails/?id=443458575)
 -  [Slashers](https://steamcommunity.com/sharedfiles/filedetails/?id=1092007703)
- - [Team Fortress 2 Gamemode](https://github.com/moddage/tf2-gamemode) (Integrated into the gamemode)
+ - [Team Fortress 2 Gamemode](https://github.com/moddage/tf2-gamemode)
  - [Cinema](https://steamcommunity.com/workshop/filedetails/?id=143148073)
  - [Quake 3](https://steamcommunity.com/sharedfiles/filedetails/?id=160207505)
  - [Slayer](https://steamcommunity.com/sharedfiles/filedetails/?id=1336605119)
@@ -33,4 +33,4 @@ Download LeadBot from [here](https://github.com/LeadKiller/leadbot/archive/maste
  - leadbot_voice _[voiceset]_
  - leadbot_fov _[75-100]_
 ### Issues
-You can submit issues on the [LsD Discord](https://discord.gg/Mv3ebbx) or through [issues](https://github.com/LeadKiller/leadbot/issues)
+You can submit issues on the [Discord](https://discord.gg/Mv3ebbx) or through [issues](https://github.com/LeadKiller/leadbot/issues)
