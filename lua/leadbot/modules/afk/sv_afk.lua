@@ -21,7 +21,6 @@ hook.Add("PlayerTick", "LeadBot_AFK", function(ply)
     end
 
     if ply.LastAFKCheck < CurTime() and !ply:IsBot() and !ply:GetNWBool("LeadBot_AFK") then
-        ply:ChatPrint("You have been designated AFK!")
         LeadBot.Botize(ply, true)
     end
 end)
