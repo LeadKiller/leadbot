@@ -1,8 +1,19 @@
+surface.CreateFont("LeadBot_AFK", {
+    font = "Roboto",
+    size = 34,
+    weight = 500
+})
+
+surface.CreateFont("LeadBot_AFK2", {
+    font = "Roboto",
+    size = 30,
+    weight = 500
+})
+
 hook.Add("HUDPaint", "AFKT", function()
     if LocalPlayer():GetNWBool("LeadBot_AFK") then
-        local aa = 200 + math.sin(CurTime() * 5) * 50
-        draw.SimpleTextOutlined("You are currently AFK", "DermaLarge", ScrW() / 2, ScrH() / 1.7, Color(255, 255, 255, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM, 1,  Color(0, 0, 0, 255))
-        draw.SimpleTextOutlined("Jump to get out of AFK", "DermaLarge", ScrW() / 2, ScrH() / 1.6, Color(255, 255, 255, aa), TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM, 1, Color(0, 0, 0, aa))
+        draw.SimpleTextOutlined("You are AFK.", "LeadBot_AFK", ScrW() / 2, ScrH() / 2.85, Color(255, 255, 255, 235), TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM, 1,  Color(0, 0, 0, 255))
+        draw.SimpleTextOutlined("Press any key to rejoin.", "LeadBot_AFK2", ScrW() / 2, ScrH() / 2.675, Color(255, 255, 255, 235), TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM, 1, Color(0, 0, 0, 255))
     end
 end)
 
@@ -22,10 +33,10 @@ hook.Add("CreateMove", "LeadBot_AFK", function(cmd)
     local ply = LocalPlayer()
 
     if ply:GetNWBool("LeadBot_AFK") then
-        if lastsend < CurTime() and cmd:KeyDown(IN_JUMP) or cmd:KeyDown(IN_FORWARD) then
+        if lastsend < CurTime() and cmd:GetButtons() ~= 0 and !cmd:KeyDown(IN_ATTACK) then
             net.Start("LeadBot_AFK_Off")
             net.SendToServer()
-            lastsend = CurTime() + 5
+            lastsend = CurTime() + 0.1
         end
 
         if cmd:KeyDown(IN_ATTACK) and tp_Gamemodes[engine.ActiveGamemode()] then
