@@ -1,4 +1,4 @@
-concommand.Add("leadbot_afk", function(ply, _, args) if ply:IsSuperAdmin() then LeadBot.Botize(ply) end end, nil, "Adds a LeadBot ;)")
+concommand.Add("leadbot_afk", function(ply, _, args) LeadBot.Botize(ply) end, nil, "Adds a LeadBot ;)")
 
 local time = CreateConVar("leadbot_afk_timetoafk", "300", {FCVAR_ARCHIVE})
 local meta = FindMetaTable("Player")
