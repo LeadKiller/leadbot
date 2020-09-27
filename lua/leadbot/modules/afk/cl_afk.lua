@@ -33,7 +33,7 @@ hook.Add("CreateMove", "LeadBot_AFK", function(cmd)
     local ply = LocalPlayer()
 
     if ply:GetNWBool("LeadBot_AFK") then
-        if lastsend < CurTime() and cmd:GetButtons() ~= 0 and !cmd:KeyDown(IN_ATTACK) then
+        if lastsend < CurTime() and cmd:GetButtons() ~= 0 and !cmd:KeyDown(IN_ATTACK) and !cmd:KeyDown(IN_WALK) and !cmd:KeyDown(IN_SCORE) then
             net.Start("LeadBot_AFK_Off")
             net.SendToServer()
             lastsend = CurTime() + 0.1
