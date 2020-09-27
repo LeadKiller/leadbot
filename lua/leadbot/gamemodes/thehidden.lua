@@ -154,7 +154,7 @@ function LeadBot.StartCommand(bot, cmd)
         buttons = buttons + IN_RELOAD
     end
 
-    if IsValid(target) and (!ishidden and controller:IsAbleToSee(target) or ishidden and target:GetPos():DistToSqr(bot:GetPos()) <= 8400) and math.random(2) == 1 then
+    if IsValid(target) and (!ishidden and controller:CanSee(target) or ishidden and target:GetPos():DistToSqr(bot:GetPos()) <= 8400) and math.random(2) == 1 then
         buttons = buttons + IN_ATTACK
     end
 
@@ -241,7 +241,7 @@ function LeadBot.PlayerMove(bot, cmd, mv)
 
     if !IsValid(controller.Target) then
         if !ishidden then
-            if hidden:GetPos():DistToSqr(bot:GetPos()) <= 3600 and controller:IsAbleToSee(hidden) then
+            if hidden:GetPos():DistToSqr(bot:GetPos()) <= 3600 and controller:CanSee(hidden) then
                 controller.Target = hidden
                 controller.ForgetTarget = CurTime() + 2
             end
@@ -256,7 +256,7 @@ function LeadBot.PlayerMove(bot, cmd, mv)
                             filter = function(ent) return ent == ply end
                         })]]
 
-                        if ply:Alive() and controller:IsAbleToSee(ply) then
+                        if ply:Alive() and controller:CanSee(ply) then
                             controller.Target = ply
                             controller.ForgetTarget = CurTime() + 2
                         end
@@ -307,7 +307,7 @@ function LeadBot.PlayerMove(bot, cmd, mv)
             controller.Target = players[1] -- table.Random(team.GetPlayers(1))
             controller.ForgetTarget = CurTime() + 1
         end
-    --[[elseif controller.ForgetTarget < CurTime() and controller:IsAbleToSee(controller.Target) then
+    --[[elseif controller.ForgetTarget < CurTime() and controller:CanSee(controller.Target) then
         controller.ForgetTarget = CurTime() + 2]]
     end
 

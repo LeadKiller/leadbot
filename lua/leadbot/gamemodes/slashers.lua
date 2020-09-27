@@ -159,13 +159,13 @@ function killermove(bot, cmd, mv)
     if !IsValid(controller.Target) then
         for _, ply in ipairs(player.GetAll()) do
             if ply ~= bot and ply:GetPos():DistToSqr(bot:GetPos()) < 144000000 then
-                if ply:Alive() and controller:IsAbleToSee(ply) then
+                if ply:Alive() and controller:CanSee(ply) then
                     controller.Target = ply
                     controller.ForgetTarget = CurTime() + 5
                 end
             end
         end
-    elseif controller.ForgetTarget - 0.1 < CurTime() and controller:IsAbleToSee(controller.Target) then
+    elseif controller.ForgetTarget - 0.1 < CurTime() and controller:CanSee(controller.Target) then
         controller.ForgetTarget = CurTime() + 5
     end
 
@@ -409,7 +409,7 @@ function survivormove(bot, cmd, mv)
                     filter = function(ent) return ent == ply end
                 })]]
 
-                if ply:Alive() and controller:IsAbleToSee(ply) then
+                if ply:Alive() and controller:CanSee(ply) then
                     controller.Target = ply
                     controller.ForgetTarget = CurTime() + 10
                 end

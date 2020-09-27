@@ -81,13 +81,13 @@ function LeadBot.PlayerMove(bot, cmd, mv)
     if !IsValid(controller.Target) then
         for _, ply in ipairs(ents.GetAll()) do
             if ply ~= bot and ((ply:IsPlayer() and (ply:Team() ~= bot:Team())) or ply:IsNPC()) and ply:GetPos():DistToSqr(bot:GetPos()) < 2250000 then
-                if ply:Alive() and controller:IsAbleToSee(ply) then
+                if ply:Alive() and controller:CanSee(ply) then
                     controller.Target = ply
                     controller.ForgetTarget = CurTime() + 2
                 end
             end
         end
-    elseif controller.ForgetTarget < CurTime() and controller:IsAbleToSee(controller.Target) then
+    elseif controller.ForgetTarget < CurTime() and controller:CanSee(controller.Target) then
         controller.ForgetTarget = CurTime() + 2
     end
 

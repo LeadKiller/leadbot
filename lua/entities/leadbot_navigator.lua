@@ -67,6 +67,53 @@ function ENT:Health()
 	return nil
 end
 
+-- remade this in lua so we can finally ignore the controller's bot
+-- for some reason it's not really possible to overwrite IsAbleToSee
+local function PointWithinViewAngle(pos, targetpos, lookdir, fov)
+	pos = targetpos - pos
+	local diff = lookdir:Dot(pos)
+	if diff < 0 then return false end
+	local len = pos:LengthSqr()
+	return diff * diff > len * fov * fov
+end
+
+function ENT:InFOV(pos, fov)
+	local owner = self:GetOwner()
+
+	if IsEntity(pos) then
+		-- we must check eyepos and worldspacecenter
+		-- maybe in the future add more points
+
+		if PointWithinViewAngle(owner:EyePos(), pos:WorldSpaceCenter(), owner:GetAimVector(), fov) then
+			return true
+		end
+
+		return PointWithinViewAngle(owner:EyePos(), pos:EyePos(), owner:GetAimVector(), fov)
+	else
+		return PointWithinViewAngle(owner:EyePos(), pos, owner:GetAimVector(), fov)
+	end
+end
+
+function ENT:CanSee(ply, fov)
+	if ply:GetPos():DistToSqr(self:GetPos()) > self:GetMaxVisionRange() * self:GetMaxVisionRange() then
+		return false
+	end
+
+	-- TODO: check fog farz and compare with distance
+
+	-- half fov or something
+	-- probably should move this to a variable
+	fov = fov or true
+
+	if fov and !self:InFOV(ply, math.cos(0.5 * (self:GetFOV() or 90) * math.pi / 180)) then
+		return false
+	end
+
+	-- TODO: we really should check worldspacecenter too
+	local owner = self:GetOwner()
+	return util.QuickTrace(owner:EyePos(), ply:EyePos() - owner:EyePos(), {owner, self}).Entity == ply
+end
+
 function ENT:RunBehaviour()
 	while (true) do
 		if self.PosGen then
