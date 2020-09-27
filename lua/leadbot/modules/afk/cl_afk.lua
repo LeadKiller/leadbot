@@ -19,7 +19,7 @@ end)
 
 local tp = false
 local last_TP = false
-local NA = Angle(0, 0, 0)
+local newangle = Angle(0, 0, 0)
 local scroll = 0
 local lastsend = CurTime()
 local tp_Gamemodes = {}
@@ -56,8 +56,8 @@ hook.Add("CreateMove", "LeadBot_AFK", function(cmd)
 
         if tp then
             local s = GetConVar("m_pitch"):GetFloat()
-            NA.pitch = math.Clamp(NA.pitch + cmd:GetMouseY() * s, -90, 90)
-            NA.yaw = NA.yaw - cmd:GetMouseX() * s
+            newangle.pitch = math.Clamp(newangle.pitch + cmd:GetMouseY() * s, -90, 90)
+            newangle.yaw = newangle.yaw - cmd:GetMouseX() * s
         end
 
         cmd:ClearButtons()
@@ -102,20 +102,20 @@ hook.Add("CalcView", "LeadBot_AFK", function(ply, origin, angles)
 
         local pos = ply:EyePos()
         local trace = util.TraceHull({
-            start = pos + NA:Forward() * Lerp(lerp, 0, -5),
-            endpos = pos + NA:Forward() * Lerp(lerp, 0, -75 - scroll),
+            start = pos + newangle:Forward() * Lerp(lerp, 0, -5),
+            endpos = pos + newangle:Forward() * Lerp(lerp, 0, -75 - scroll),
             filter = ply,
             mins = Vector(-8, -8, -8),
             maxs = Vector(8, 8, 8),
         })
 
-        view.angles = NA
+        view.angles = newangle
         view.origin = trace.HitPos
         view.drawviewer = true
     else
         ang = LerpAngle(FrameTime() * 16, ang, angles)
         ang = Angle(ang.p, ang.y, 0)
-        NA = ang
+        newangle = ang
         view.angles = ang
     end
 
