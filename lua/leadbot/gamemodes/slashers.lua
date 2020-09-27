@@ -79,7 +79,7 @@ function killercmd(bot, cmd)
 
     if !IsValid(controller) then return end
 
-    if LeadBot.NoSprint then
+    if bot:LBGetStrategy() == 1 then
         buttons = 0
     end
 
