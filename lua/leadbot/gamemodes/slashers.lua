@@ -158,7 +158,7 @@ function killermove(bot, cmd, mv)
 
     if !IsValid(controller.Target) then
         for _, ply in ipairs(player.GetAll()) do
-            if ply ~= bot and ply:GetPos():DistToSqr(bot:GetPos()) < 2250000 then
+            if ply ~= bot and ply:GetPos():DistToSqr(bot:GetPos()) < 144000000 then
                 if ply:Alive() and controller:IsAbleToSee(ply) then
                     controller.Target = ply
                     controller.ForgetTarget = CurTime() + 5
@@ -401,7 +401,7 @@ function survivormove(bot, cmd, mv)
 
     if !IsValid(controller.Target) then
         for _, ply in ipairs(player.GetAll()) do
-            if ply ~= bot and ply:Team() ~= bot:Team() and ply:GetPos():DistToSqr(bot:GetPos()) < 2250000 then
+            if ply ~= bot and ply:Team() ~= bot:Team() and ply:GetPos():DistToSqr(bot:GetPos()) < 4500000 then
                 --[[local targetpos = ply:EyePos() - Vector(0, 0, 10)
                 local trace = util.TraceLine({
                     start = bot:GetShootPos(),
@@ -495,10 +495,7 @@ function survivormove(bot, cmd, mv)
                 controller.LastSegmented = CurTime() + 1
             else
                 if controller.PosGen and bot:GetPos():DistToSqr(controller.PosGen) < 1000 then
-                    --[[print("Checked the... " .. string.upper(objective) .. "!")
-                    print(#bot.Unchecked[objective] .. " before...")]]
                     table.RemoveByValue(bot.Unchecked[objective], controller.PosGen)
-                    -- print(#bot.Unchecked[objective] .. " left...")
                 end
 
                 controller.PosGen = table.Random(bot.Unchecked[objective])
@@ -511,25 +508,60 @@ function survivormove(bot, cmd, mv)
         end
     elseif IsValid(controller.Target) and controller.LastSegmented < CurTime() then
         if !bot.hidingspot or util.QuickTrace(bot:EyePos(), controller.Target:WorldSpaceCenter() - bot:EyePos(), bot).Entity == controller.Target then
-            local area = table.Random(HidingSpots)
-            if #area[2] > 0 and controller.loco:IsAreaTraversable(area[1]) then
-                local spot = table.Random(area[2])
-                bot.hidingspot = spot
+            local hidingspots = table.Copy(HidingSpots)
+            local players = player.GetAll()
+
+            for id, spot in ipairs(hidingspots) do
+                if #spot[2] > 0 then
+                    local closest = bot
+                    local distance = 999999999999
+                    local area = spot[1]
+
+                    spot = table.Random(spot[2])
+
+                    for _, ply in ipairs(players) do
+                        local dist = ply:GetPos():DistToSqr(spot)
+                        if dist < distance then
+                            distance = dist
+                            closest = ply
+                        end
+                    end
+
+                    if !controller.loco:IsAreaTraversable(area) or spot:DistToSqr(bot:GetPos()) > 1000000 or closest:Team() == TEAM_KILLER or (team.GetPlayers(TEAM_KILLER)[1]:VisibleVec(spot)) then
+                        hidingspots[id] = nil
+                        continue
+                    end
+                else
+                    hidingspots[id] = nil
+                end
             end
-        else
-            local dist = bot:GetPos():DistToSqr(bot.hidingspot)
-            if dist < 1200 then -- we're here
-                --[[if util.QuickTrace(bot:EyePos(), controller.Target:WorldSpaceCenter() - bot:EyePos(), bot).Entity == controller.Target then
-                    bot.hidingspot = nil
-                else]]
-                    controller.PosGen = nil
-                -- end
-            else -- we need to run...
-                controller.PosGen = bot.hidingspot
-            end
+
+            local area = table.Random(hidingspots)
+            local spot = table.Random(area[2])
+
+            bot.hidingspot = spot
+            controller.PosGen = bot.hidingspot
         end
 
         controller.LastSegmented = CurTime() + 5
+    end
+
+    if IsValid(controller.Target) and bot.hidingspot and bot:GetPos():DistToSqr(bot.hidingspot) <= 5625 then
+        controller.PosGen = nil
+        mv:SetForwardSpeed(0)
+        controller.NextCenter = CurTime()
+        controller.nextStuckJump = CurTime() + 0.5
+        controller.cur_segment = {}
+
+        if controller.LookAtTime < CurTime() then
+            controller.LookAt = Angle(math.random(-30, 30), math.random(-180, 180), 0)
+            controller.LookAtTime = CurTime() + math.Rand(0.5, 1)
+        elseif controller.LookAtTime > CurTime() and controller.LookAt then
+            local ang = LerpAngle(FrameTime() * 3, bot:EyeAngles(), controller.LookAt)
+            bot:SetEyeAngles(Angle(ang.p, ang.y, 0))
+        end
+
+        return
     end
 
     if !IsValid(controller.UseTarget) and !IsValid(controller.Target) and controller.LookAtTime < CurTime() then
