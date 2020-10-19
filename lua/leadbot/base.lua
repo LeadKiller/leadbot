@@ -20,103 +20,105 @@ CreateConVar("leadbot_fov", "0", {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "LeadBot FOV\nSe
 
 --[[ FUNCTIONS ]]--
 
-local name_Default = {}
-name_Default["alyx"] = "Alyx Vance"
-name_Default["kleiner"] = "Isaac Kleiner"
-name_Default["breen"] = "Dr. Wallace Breen"
-name_Default["gman"] = "The G-Man"
-name_Default["odessa"] = "Odessa Cubbage"
-name_Default["eli"] = "Eli Vance"
-name_Default["monk"] = "Father Grigori"
-name_Default["mossman"] = "Judith Mossman"
-name_Default["mossmanarctic"] = "Judith Mossman"
-name_Default["barney"] = "Barney Calhoun"
+local name_Default = {
+    alyx = "Alyx Vance",
+    kleiner = "Isaac Kleiner",
+    breen = "Dr. Wallace Breen",
+    gman = "The G-Man",
+    odessa = "Odessa Cubbage",
+    eli = "Eli Vance",
+    monk = "Father Grigori",
+    mossman = "Judith Mossman",
+    mossmanarctic = "Judith Mossman",
+    barney = "Barney Calhoun",
 
-name_Default["dod_american"] = "American Soldier"
-name_Default["dod_german"] = "German Soldier"
 
-name_Default["css_swat"] = "GIGN"
-name_Default["css_leet"] = "Elite Crew"
-name_Default["css_arctic"] = "Artic Avengers"
-name_Default["css_urban"] = "SEAL Team Six"
-name_Default["css_riot"] = "GSG-9"
-name_Default["css_gasmask"] = "SAS"
-name_Default["css_phoenix"] = "Phoenix Connexion"
-name_Default["css_guerilla"] = "Guerilla Warfare"
+    dod_american = "American Soldier",
+    dod_german = "German Soldier",
 
-name_Default["hostage01"] = "Art"
-name_Default["hostage02"] = "Sandro"
-name_Default["hostage03"] = "Vance"
-name_Default["hostage04"] = "Cohrt"
+    css_swat = "GIGN",
+    css_leet = "Elite Crew",
+    css_arctic = "Artic Avengers",
+    css_urban = "SEAL Team Six",
+    css_riot = "GSG-9",
+    css_gasmask = "SAS",
+    css_phoenix = "Phoenix Connexion",
+    css_guerilla = "Guerilla Warfare",
 
-name_Default["police"] = "Civil Protection"
-name_Default["policefem"] = "Civil Protection"
+    hostage01 = "Art",
+    hostage02 = "Sandro",
+    hostage03 = "Vance",
+    hostage04 = "Cohrt",
 
-name_Default["chell"] = "Chell"
+    police = "Civil Protection",
+    policefem = "Civil Protection",
 
-name_Default["combine"] = "Combine Soldier"
-name_Default["combineprison"] = "Combine Prison Guard"
-name_Default["combineelite"] = "Elite Combine Soldier"
-name_Default["stripped"] = "Stripped Combine Soldier"
+    chell = "Chell",
 
-name_Default["zombie"] = "Zombie"
-name_Default["zombiefast"] = "Fast Zombie"
-name_Default["zombine"] = "Zombine"
-name_Default["corpse"] = "Corpse"
-name_Default["charple"] = "Charple"
-name_Default["skeleton"] = "Skeleton"
+    combine = "Combine Soldier",
+    combineprison = "Combine Prison Guard",
+    combineelite = "Elite Combine Soldier",
+    stripped = "Stripped Combine Soldier",
 
-name_Default["male01"] = "Van"
-name_Default["male02"] = "Ted"
-name_Default["male03"] = "Joe"
-name_Default["male04"] = "Eric"
-name_Default["male05"] = "Art"
-name_Default["male06"] = "Sandro"
-name_Default["male07"] = "Mike"
-name_Default["male08"] = "Vance"
-name_Default["male09"] = "Erdin"
-name_Default["male10"] = "Van"
-name_Default["male11"] = "Ted"
-name_Default["male12"] = "Joe"
-name_Default["male13"] = "Eric"
-name_Default["male14"] = "Art"
-name_Default["male15"] = "Sandro"
-name_Default["male16"] = "Mike"
-name_Default["male17"] = "Vance"
-name_Default["male18"] = "Erdin"
-name_Default["female01"] = "Joey"
-name_Default["female02"] = "Kanisha"
-name_Default["female03"] = "Kim"
-name_Default["female04"] = "Chau"
-name_Default["female05"] = "Naomi"
-name_Default["female06"] = "Lakeetra"
-name_Default["female07"] = "Joey"
-name_Default["female08"] = "Kanisha"
-name_Default["female09"] = "Kim"
-name_Default["female10"] = "Chau"
-name_Default["female11"] = "Naomi"
-name_Default["female12"] = "Lakeetra"
+    zombie = "Zombie",
+    zombiefast = "Fast Zombie",
+    zombine = "Zombine",
+    corpse = "Corpse",
+    charple = "Charple",
+    skeleton = "Skeleton",
 
-name_Default["medic01"] = "Van"
-name_Default["medic02"] = "Ted"
-name_Default["medic03"] = "Joe"
-name_Default["medic04"] = "Eric"
-name_Default["medic05"] = "Art"
-name_Default["medic06"] = "Sandro"
-name_Default["medic07"] = "Mike"
-name_Default["medic08"] = "Vance"
-name_Default["medic09"] = "Erdin"
-name_Default["medic10"] = "Joey"
-name_Default["medic11"] = "Kanisha"
-name_Default["medic12"] = "Kim"
-name_Default["medic13"] = "Chau"
-name_Default["medic14"] = "Naomi"
-name_Default["medic15"] = "Lakeetra"
+    male01 = "Van",
+    male02 = "Ted",
+    male03 = "Joe",
+    male04 = "Eric",
+    male05 = "Art",
+    male06 = "Sandro",
+    male07 = "Mike",
+    male08 = "Vance",
+    male09 = "Erdin",
+    male10 = "Van",
+    male11 = "Ted",
+    male12 = "Joe",
+    male13 = "Eric",
+    male14 = "Art",
+    male15 = "Sandro",
+    male16 = "Mike",
+    male17 = "Vance",
+    male18 = "Erdin",
+    female01 = "Joey",
+    female02 = "Kanisha",
+    female03 = "Kim",
+    female04 = "Chau",
+    female05 = "Naomi",
+    female06 = "Lakeetra",
+    female07 = "Joey",
+    female08 = "Kanisha",
+    female09 = "Kim",
+    female10 = "Chau",
+    female11 = "Naomi",
+    female12 = "Lakeetra",
 
-name_Default["refugee01"] = "Ted"
-name_Default["refugee02"] = "Eric"
-name_Default["refugee03"] = "Sandro"
-name_Default["refugee04"] = "Vance"
+    medic01 = "Van",
+    medic02 = "Ted",
+    medic03 = "Joe",
+    medic04 = "Eric",
+    medic05 = "Art",
+    medic06 = "Sandro",
+    medic07 = "Mike",
+    medic08 = "Vance",
+    medic09 = "Erdin",
+    medic10 = "Joey",
+    medic11 = "Kanisha",
+    medic12 = "Kim",
+    medic13 = "Chau",
+    medic14 = "Naomi",
+    medic15 = "Lakeetra",
+
+    refugee01 = "Ted",
+    refugee02 = "Eric",
+    refugee03 = "Sandro",
+    refugee04 = "Vance",
+}
 
 function LeadBot.AddBot()
     if !FindMetaTable("NextBot").GetFOV then
@@ -225,11 +227,7 @@ function LeadBot.AddBot()
         color = Vector(0.24, 0.34, 0.41)
     end
 
-    bot.LeadBot_Config = {}
-    bot.LeadBot_Config[1] = model
-    bot.LeadBot_Config[2] = color
-    bot.LeadBot_Config[3] = weaponcolor
-    bot.LeadBot_Config[4] = strategy
+    bot.LeadBot_Config = {model, color, weaponcolor, strategy}
 
     -- for legacy purposes, will be removed soon when gamemodes are updated
     bot.BotStrategy = strategy
