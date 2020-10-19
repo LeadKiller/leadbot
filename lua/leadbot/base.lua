@@ -131,7 +131,7 @@ function LeadBot.AddBot()
         return
     end
 
-    if #player.GetAll() == game.MaxPlayers() then
+    if player.GetCount() == game.MaxPlayers() then
         MsgN("[LeadBot] Player limit reached!")
         return
     end
