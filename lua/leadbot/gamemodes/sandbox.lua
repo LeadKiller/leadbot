@@ -22,6 +22,7 @@ local function MingeBag(ply)
 	local filen = string.Split(file.Read("e2files/" .. filenn, "DATA"), "|")
 	local MingebagTimer = 0
 	local origin = ply:GetEyeTrace().HitPos
+	local OriginMingebag
 
 	for k, v in pairs(filen) do
 		if string.find(v, "model") then
