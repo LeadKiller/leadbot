@@ -184,7 +184,7 @@ function LeadBot.PlayerMove(bot, cmd, mv)
     if nextcheck < CurTime() then
         nextcheck = CurTime() + 5
         trees = {}
-        stones = {}
+        rocks = {}
         ores = {}
         for _, breakable in pairs(ents.FindByClass("func_breakable")) do
             local ohno = ents.FindInSphere(breakable:GetPos(), 16)[1]
@@ -195,7 +195,7 @@ function LeadBot.PlayerMove(bot, cmd, mv)
                 elseif string.find(mdl, "granite") then
                     table.insert(ores, breakable)
                 elseif string.find(mdl, "rock") then
-                    table.insert(stones, breakable)
+                    table.insert(rocks, breakable)
                 end
             end
         end

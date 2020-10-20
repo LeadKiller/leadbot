@@ -13,6 +13,8 @@ function LeadBot.PlayerSpawn(bot)
 end
 
 function LeadBot.StartCommand(bot, cmd)
+    local buttons
+
     cmd:ClearButtons()
     cmd:ClearMovement()
 

@@ -1,5 +1,3 @@
-chats = {}
-
 net.Receive("botVoiceStart", function()
     local ply = net.ReadEntity()
     local soundn = net.ReadString()
