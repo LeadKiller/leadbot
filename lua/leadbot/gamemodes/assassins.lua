@@ -274,10 +274,12 @@ end
 -- fix for timers
 
 hook.Add("Initialize", "LeadBot_TimerFix", function()
-    ply:SetTarget(NULL, true)
-    timer.Create("ass_plytargetdelay" .. ply:EntIndex(), delay or ConVars.Server.newTargetDelay:GetFloat(), 1, function()
-        if IsValid(ply) then
-            ply:SetTarget(GAMEMODE:GetNewTarget(ply))
-        end
-    end)
+    function DelayNewTarget(ply, delay)
+        ply:SetTarget(NULL, true)
+        timer.Create("ass_plytargetdelay" .. ply:EntIndex(), delay or ConVars.Server.newTargetDelay:GetFloat(), 1, function()
+            if IsValid(ply) then
+                ply:SetTarget(GAMEMODE:GetNewTarget(ply))
+            end
+        end)
+    end
 end)
