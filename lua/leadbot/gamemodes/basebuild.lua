@@ -64,7 +64,6 @@ function LeadBot.StartCommand(bot, cmd)
     local botWeapon = bot:GetActiveWeapon()
     local controller = bot.ControllerBot
     local target = controller.Target
-    local strat = bot.LeadBot_Config[4]
 
     if IsValid(botWeapon) then
         if (botWeapon:Clip1() == 0 or !IsValid(target) and botWeapon:Clip1() <= botWeapon:GetMaxClip1() / 2) then

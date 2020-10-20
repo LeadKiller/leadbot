@@ -18,7 +18,7 @@ local function addSpots()
 
     for _, area in pairs(areas) do
         local spots = area:GetHidingSpots(1)
-        local spots2 = area:GetHidingSpots(8)
+        -- local spots2 = area:GetHidingSpots(8)
         local spotsReset2 = {}
 
         for _, spot in pairs(spots) do

@@ -15,14 +15,11 @@ function LeadBot.Think()
 end
 
 function LeadBot.StartCommand(bot, cmd)
-    if !bot:CanCharge() and IsValid(bot.TargetEnt) and bot.TargetEnt:GetPos():DistToSqr(bot:GetPos()) < 2400 then
-        if math.random(2) == 1 then
-            cmd:SetButtons(IN_ATTACK)
-        end
+    if !bot:CanCharge() and IsValid(bot.TargetEnt) and bot.TargetEnt:GetPos():DistToSqr(bot:GetPos()) < 2400 and math.random(2) == 1 then
+        cmd:SetButtons(IN_ATTACK)
     end
 end
 
-local attackAI
 local footballAI
 local football
 local strategy1
@@ -50,10 +47,6 @@ function LeadBot.PlayerMove(bot, cmd, mv)
     else
         strategy1(bot, cmd, mv, IsValid(football:GetCarrier()))
     end
-end
-
-local function strategy0(bot, cmd, mv)
-
 end
 
 function strategy1(bot, cmd, mv, force)

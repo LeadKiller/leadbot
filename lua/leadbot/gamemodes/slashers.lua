@@ -25,7 +25,7 @@ local function addSpots()
 
     for _, area in pairs(areas) do
         local spots = area:GetHidingSpots(1)
-        local spots2 = area:GetHidingSpots(8)
+        -- local spots2 = area:GetHidingSpots(8)
         local spotsReset2 = {}
 
         for _, spot in pairs(spots) do
@@ -652,12 +652,10 @@ function survivormove(bot, cmd, mv)
     end
 
     -- eyesight
-    local lerp = FrameTime() * math.random(8, 10)
     local lerpc = FrameTime() * 8
     local lerpc2 = FrameTime() * 3
 
     if !LeadBot.LerpAim then
-        lerp = 1
         lerpc = 1
     end
 

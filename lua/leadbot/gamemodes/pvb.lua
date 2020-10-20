@@ -33,11 +33,11 @@ function LeadBot.StartCommand(bot, cmd)
         buttons = buttons + IN_DUCK
     end
 
-    local usingsword = false
+    --local usingsword = false
 
-    if IsValid(botWeapon) then
-        usingsword = false --botWeapon:GetClass() == "weapon_cutlass" or botWeapon:GetClass() == "weapon_spear" or botWeapon:GetClass() == "weapon_bonercutlass"
-    end
+    --if IsValid(botWeapon) then
+    --    usingsword = false --botWeapon:GetClass() == "weapon_cutlass" or botWeapon:GetClass() == "weapon_spear" or botWeapon:GetClass() == "weapon_bonercutlass"
+    --end
 
     cmd:ClearButtons()
     cmd:ClearMovement()
