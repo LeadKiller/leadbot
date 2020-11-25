@@ -34,4 +34,4 @@ Download LeadBot from [here](https://github.com/LeadKiller/leadbot/archive/maste
  - leadbot_voice _[voiceset]_
  - leadbot_fov _[75-100]_
 ### Issues
-You can submit issues on the [Discord](https://discord.gg/Mv3ebbx) or through [issues](https://github.com/LeadKiller/leadbot/issues)
+You can submit issues on the [Discord](https://discord.gg/PJByEaPgTq) or through [issues](https://github.com/LeadKiller/leadbot/issues)
