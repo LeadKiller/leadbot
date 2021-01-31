@@ -31,6 +31,8 @@ function LeadBot.TalkToMe(ply, type)
         selectedvoice = ply.LeadBot_Voice
     elseif LeadBot.VoicePreset[voice] then
         selectedvoice = voice
+    elseif voice == "" then
+        return
     end
 
     for k, v in pairs(player.GetAll()) do
