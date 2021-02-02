@@ -79,12 +79,10 @@ function LeadBot.PlayerMove(bot, cmd, mv)
     end
 
     if !IsValid(controller.Target) then
-        for _, ply in ipairs(ents.GetAll()) do
-            if ply ~= bot and ((ply:IsPlayer() and (ply:Team() ~= bot:Team())) or ply:IsNPC()) and ply:GetPos():DistToSqr(bot:GetPos()) < 2250000 then
-                if ply:Alive() and controller:CanSee(ply) then
-                    controller.Target = ply
-                    controller.ForgetTarget = CurTime() + 2
-                end
+        for _, ply in ipairs(player.GetAll()) do
+            if ply ~= bot and ply:Team() ~= bot:Team() and ply:Alive() and ply:GetPos():DistToSqr(bot:GetPos()) < 2250000 and controller:CanSee(ply) then
+                controller.Target = ply
+                controller.ForgetTarget = CurTime() + 2
             end
         end
     elseif controller.ForgetTarget < CurTime() and controller:CanSee(controller.Target) then
