@@ -3,10 +3,16 @@ util.AddNetworkString("botVoiceStart")
 LeadBot.VoicePreset = {}
 LeadBot.VoiceModels = {}
 
-local convar = CreateConVar("leadbot_voice", "random", {FCVAR_ARCHIVE}, "Voice Preset.\nOptions are: \n- \"random\"\n- \"" .. table.concat(table.GetKeys(LeadBot.VoicePreset), "\"\n- \"") .. "\"")
+local convar
+
+hook.Add("Initialize", "LeadBot_Voice", function()
+    convar = CreateConVar("leadbot_voice", "random", {FCVAR_ARCHIVE}, "Voice Preset.\nOptions are: \n- \"random\"\n- \"" .. table.concat(table.GetKeys(LeadBot.VoicePreset), "\"\n- \"") .. "\"")
+end)
 
 function LeadBot.TalkToMe(ply, type)
     if !ply:IsLBot(true) then return end
+
+    if !convar then convar =  CreateConVar("leadbot_voice", "random", {FCVAR_ARCHIVE}, "Voice Preset.\nOptions are: \n- \"random\"\n- \"" .. table.concat(table.GetKeys(LeadBot.VoicePreset), "\"\n- \"") .. "\"") end
 
     local hear = {}
     local sound = ""

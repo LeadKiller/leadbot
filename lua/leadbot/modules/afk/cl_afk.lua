@@ -21,6 +21,8 @@ local tp = false
 local last_TP = false
 local newangle = Angle(0, 0, 0)
 local scroll = 0
+local buttons = 0
+local target
 local lastsend = CurTime()
 local tp_Gamemodes = {}
 local NoAFKCamera = {}
@@ -28,6 +30,37 @@ tp_Gamemodes["sandbox"] = true
 tp_Gamemodes["darkestdays"] = true
 NoAFKCamera["assassins"] = true
 NoAFKCamera["cavefight"] = true
+
+net.Receive("LeadBot_AFK_Keys", function()
+    buttons = net.ReadInt(32)
+    target = net.ReadEntity()
+end)
+
+local meta = FindMetaTable("Player")
+
+if !oldIsSprinting then
+    oldIsSprinting = meta.IsSprinting
+end
+
+if !oldKeyDown then
+    oldKeyDown = meta.KeyDown
+end
+
+function meta:IsSprinting()
+    if LocalPlayer():GetNWBool("LeadBot_AFK") then
+        return bit.band(buttons, IN_SPEED) == IN_SPEED
+    else
+        return oldIsSprinting(self)
+    end
+end
+
+function meta:KeyDown(key)
+    if LocalPlayer():GetNWBool("LeadBot_AFK") then
+        return bit.band(buttons, key) == key
+    else
+        return oldKeyDown(self, key)
+    end
+end
 
 hook.Add("CreateMove", "LeadBot_AFK", function(cmd)
     local ply = LocalPlayer()
@@ -63,10 +96,14 @@ hook.Add("CreateMove", "LeadBot_AFK", function(cmd)
         cmd:ClearButtons()
         cmd:ClearMovement()
         cmd:SetImpulse(0)
+        cmd:SetButtons(buttons)
 
         cmd:SetMouseX(0)
         cmd:SetMouseY(0)
+    elseif buttons ~= 0 then
+        buttons = 0
     end
+
 end)
 
 hook.Add("InputMouseApply", "LeadBot_AFK", function(cmd)
@@ -80,6 +117,12 @@ end)
 hook.Add("HUDShouldDraw", "LeadBot_AFK", function(hud)
     if hud == "CHudWeaponSelection" and LocalPlayer():GetNWBool("LeadBot_AFK") then
         return false
+    end
+end)
+
+hook.Add("PreDrawHalos", "LeadBot_AFK", function()
+    if LocalPlayer():GetNWBool("LeadBot_AFK") and IsValid(target) and target ~= game.GetWorld() and target:Health() > 0 then
+        halo.Add({target}, target:GetPlayerColor():ToColor(), 2, 2, 1, false, false)
     end
 end)
 
@@ -109,31 +152,10 @@ hook.Add("CalcView", "LeadBot_AFK", function(ply, origin, angles)
             maxs = Vector(8, 8, 8),
         })
 
-        view.angles = newangle
-        view.origin = trace.HitPos
-        view.drawviewer = true
-    else
-        ang = LerpAngle(FrameTime() * 16, ang, angles)
-        ang = Angle(ang.p, ang.y, 0)
-        newangle = ang
-        view.angles = ang
+        return {
+            origin = trace.HitPos,
+            angles = newangle,
+            drawviewer = true
+        }
     end
-
-    return view
-end)
-
-hook.Add("CalcViewModelView", "LeadBot_AFK", function(wep, vm, oldpos, oldang, newpos, newang)
-    local ply = LocalPlayer()
-
-    if ply:ShouldDrawLocalPlayer() or !ply:GetNWBool("LeadBot_AFK") or NoAFKCamera[engine.ActiveGamemode()] then return end
-
-    if wep.GetViewModelPosition then
-        newpos, newang = wep:GetViewModelPosition(newpos, newang)
-    end
-
-    if wep.CalcViewModelView then
-        newpos, newang = wep:CalcViewModelView(vm, oldpos, oldang, newpos, newang)
-    end
-
-    return newpos, ang
 end)

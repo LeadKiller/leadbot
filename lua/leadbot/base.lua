@@ -31,11 +31,6 @@ local name_Default = {
     mossman = "Judith Mossman",
     mossmanarctic = "Judith Mossman",
     barney = "Barney Calhoun",
-
-
-    dod_american = "American Soldier",
-    dod_german = "German Soldier",
-
     css_swat = "GIGN",
     css_leet = "Elite Crew",
     css_arctic = "Artic Avengers",
@@ -44,29 +39,25 @@ local name_Default = {
     css_gasmask = "SAS",
     css_phoenix = "Phoenix Connexion",
     css_guerilla = "Guerilla Warfare",
-
+    dod_american = "American Soldier",
+    dod_german = "German Soldier",
     hostage01 = "Art",
     hostage02 = "Sandro",
     hostage03 = "Vance",
     hostage04 = "Cohrt",
-
     police = "Civil Protection",
     policefem = "Civil Protection",
-
     chell = "Chell",
-
     combine = "Combine Soldier",
     combineprison = "Combine Prison Guard",
     combineelite = "Elite Combine Soldier",
     stripped = "Stripped Combine Soldier",
-
     zombie = "Zombie",
     zombiefast = "Fast Zombie",
     zombine = "Zombine",
     corpse = "Corpse",
     charple = "Charple",
     skeleton = "Skeleton",
-
     male01 = "Van",
     male02 = "Ted",
     male03 = "Joe",
@@ -97,7 +88,6 @@ local name_Default = {
     female10 = "Chau",
     female11 = "Naomi",
     female12 = "Lakeetra",
-
     medic01 = "Van",
     medic02 = "Ted",
     medic03 = "Joe",
@@ -113,7 +103,6 @@ local name_Default = {
     medic13 = "Chau",
     medic14 = "Naomi",
     medic15 = "Lakeetra",
-
     refugee01 = "Ted",
     refugee02 = "Eric",
     refugee03 = "Sandro",
@@ -227,7 +216,7 @@ function LeadBot.AddBot()
         color = Vector(0.24, 0.34, 0.41)
     end
 
-    bot.LeadBot_Config = {model, color, weaponcolor, strategy}
+    bot.LeadBot_Config = {model, color, weaponcolor, strategy, math.random(3)}
 
     -- for legacy purposes, will be removed soon when gamemodes are updated
     bot.BotStrategy = strategy
@@ -238,6 +227,7 @@ function LeadBot.AddBot()
     bot.LeadBot = true
     LeadBot.AddBotOverride(bot)
     LeadBot.AddBotControllerOverride(bot, bot.ControllerBot)
+    bot:Spawn()
     MsgN("[LeadBot] Bot " .. name .. " with strategy " .. bot.BotStrategy .. " added!")
 end
 
@@ -258,17 +248,19 @@ function LeadBot.PlayerSpawn(bot)
 end
 
 function LeadBot.Think()
-    for _, bot in pairs(player.GetBots()) do
+    for _, bot in pairs(player.GetAll()) do
         if bot:IsLBot() then
             if LeadBot.RespawnAllowed and bot.NextSpawnTime and !bot:Alive() and bot.NextSpawnTime < CurTime() then
                 bot:Spawn()
                 return
             end
 
-            local wep = bot:GetActiveWeapon()
-            if IsValid(wep) then
-                local ammoty = wep:GetPrimaryAmmoType() or wep.Primary.Ammo
-                bot:SetAmmo(999, ammoty)
+            if bot:IsLBot(true) then
+                local wep = bot:GetActiveWeapon()
+                if IsValid(wep) then
+                    local ammoty = wep:GetPrimaryAmmoType() or wep.Primary.Ammo
+                    bot:SetAmmo(999, ammoty)
+                end
             end
         end
     end
@@ -278,14 +270,14 @@ function LeadBot.PostPlayerDeath(bot)
 end
 
 function LeadBot.PlayerHurt(ply, bot, hp, dmg)
-    if bot:IsPlayer() then
+    if bot:IsPlayer() or bot:IsNPC() then
         if hp <= dmg and math.random(3) == 1 and bot:IsLBot() then
             LeadBot.TalkToMe(bot, "taunt")
         end
 
         local controller = ply:GetController()
-
-        controller.LookAtTime = CurTime() + 2
+        if IsValid(controller.Target) then return end
+        controller.LookAtTime = CurTime() + math.Rand(0.4, 0.8)
         controller.LookAt = ((bot:GetPos() + VectorRand() * 128) - ply:GetPos()):Angle()
     end
 end
@@ -295,21 +287,36 @@ function LeadBot.StartCommand(bot, cmd)
     local botWeapon = bot:GetActiveWeapon()
     local controller = bot.ControllerBot
     local target = controller.Target
+    local dist = IsValid(target) and bot:GetPos():DistToSqr(target:GetPos())
 
+    -- wait for the ai to exist
     if !IsValid(controller) then return end
 
-    if LeadBot.NoSprint then
+    -- wait for the bot to be alive
+    if !bot:Alive() then
+        if math.random(2) == 1 then
+            cmd:SetButtons(IN_ATTACK)
+        end
+
+        return
+    end
+
+    -- do not sprint if we aren't supposed to
+    if LeadBot.NoSprint or IsValid(target) then
         buttons = 0
     end
 
-    if IsValid(botWeapon) and (botWeapon:Clip1() == 0 or !IsValid(target) and botWeapon:Clip1() <= botWeapon:GetMaxClip1() / 2) then
+    -- reload if we must
+    if IsValid(botWeapon) and (botWeapon:Clip1() == 0 or !IsValid(target) and (controller.ForgetTarget + 2 < CurTime() or botWeapon:Clip1() <= botWeapon:GetMaxClip1() / 2)) then
         buttons = buttons + IN_RELOAD
     end
 
-    if IsValid(target) and math.random(2) == 1 then
+    -- attack, but don't hold down attack since it's slow with most weapons
+    if IsValid(target) and util.QuickTrace(bot:EyePos(), target:WorldSpaceCenter() - bot:EyePos(), bot).Entity == target and math.random(2) == 1 and dist <= 1440000 then
         buttons = buttons + IN_ATTACK
     end
 
+    -- climb CS:S ladders
     if bot:GetMoveType() == MOVETYPE_LADDER then
         local pos = controller.goalPos
         local ang = ((pos + bot:GetCurrentViewOffset()) - bot:GetShootPos()):Angle()
@@ -325,6 +332,7 @@ function LeadBot.StartCommand(bot, cmd)
         buttons = buttons + IN_FORWARD
     end
 
+    -- crouch/jump if we have to
     if controller.NextDuck > CurTime() then
         buttons = buttons + IN_DUCK
     elseif controller.NextJump == 0 then
@@ -332,11 +340,18 @@ function LeadBot.StartCommand(bot, cmd)
         buttons = buttons + IN_JUMP
     end
 
+    -- crouch if we are jumping so we can do a crouch jump
     if !bot:IsOnGround() and controller.NextJump > CurTime() then
         buttons = buttons + IN_DUCK
     end
 
-    bot:SelectWeapon((IsValid(controller.Target) and controller.Target:GetPos():DistToSqr(controller:GetPos()) < 129000 and "weapon_shotgun") or "weapon_smg1")
+    -- select weapon
+    bot:SelectWeapon("weapon_ar2")
+
+    -- send buttons to clients when afk so anims don't break
+    bot.LeadBot_Keys = buttons
+
+    -- simulate pressing keys
     cmd:ClearButtons()
     cmd:ClearMovement()
     cmd:SetButtons(buttons)
@@ -345,6 +360,12 @@ end
 function LeadBot.PlayerMove(bot, cmd, mv)
     local controller = bot.ControllerBot
 
+    -- bot shouldn't think while not alive
+    if !bot:Alive() then return end
+
+    local time = SysTime()
+
+    -- create ai if it doesn't exist
     if !IsValid(controller) then
         bot.ControllerBot = ents.Create("leadbot_navigator")
         bot.ControllerBot:Spawn()
@@ -352,55 +373,97 @@ function LeadBot.PlayerMove(bot, cmd, mv)
         controller = bot.ControllerBot
     end
 
-    --[[local min, max = controller:GetModelBounds()
-    debugoverlay.Box(controller:GetPos(), min, max, 0.1, Color(255, 0, 0, 0), true)]]
-
     -- force a recompute
     if controller.PosGen and controller.P and controller.TPos ~= controller.PosGen then
         controller.TPos = controller.PosGen
         controller.P:Compute(controller, controller.PosGen)
     end
 
+    -- set ai to compute at bot pos
     if controller:GetPos() ~= bot:GetPos() then
         controller:SetPos(bot:GetPos())
     end
 
+    -- set ai to see from bot eyes
     if controller:GetAngles() ~= bot:EyeAngles() then
         controller:SetAngles(bot:EyeAngles())
     end
 
+    -- bot moves forward
     mv:SetForwardSpeed(1200)
 
-    if (bot.NextSpawnTime and bot.NextSpawnTime + 1 > CurTime()) or !IsValid(controller.Target) or controller.ForgetTarget < CurTime() or controller.Target:Health() < 1 then
+    -- bot forgets targets when spawning, target doesn't exist or target is dead
+    if (bot.NextSpawnTime and bot.NextSpawnTime > CurTime()) or !IsValid(controller.Target) or controller.Target:Health() < 1 then
         controller.Target = nil
     end
 
-    if !IsValid(controller.Target) then
-        for _, ply in ipairs(player.GetAll()) do
-            if ply ~= bot and ((ply:IsPlayer() and (!LeadBot.TeamPlay or (LeadBot.TeamPlay and (ply:Team() ~= bot:Team())))) or ply:IsNPC()) and ply:GetPos():DistToSqr(bot:GetPos()) < 2250000 then
-                --[[local targetpos = ply:EyePos() - Vector(0, 0, 10)
-                local trace = util.TraceLine({
-                    start = bot:GetShootPos(),
-                    endpos = targetpos,
-                    filter = function(ent) return ent == ply end
-                })]]
+    -- bot searches for targets every so often
+    if controller.LastSearched < CurTime() then
+        local closest
+        local distance = math.huge
 
-                if ply:Alive() and controller:CanSee(ply) then
-                    controller.Target = ply
-                    controller.ForgetTarget = CurTime() + 2
+        controller.VisibleTargets = {}
+
+        for _, ply in ipairs(ents.GetAll()) do
+            if !ply:IsPlayer() and !ply:IsNPC() then continue end
+            if ply.Team and (!LeadBot.TeamPlay or ply:Team() ~= bot:Team()) or ply:IsNPC() and ply:Disposition(bot) == D_HT then
+                local dist = bot:GetPos():DistToSqr(ply:GetPos())
+
+                if dist < 4194304 and ply:Health() > 0 and (controller:CanSee(ply) or bot:GetEyeTrace().Entity == ply) then
+                    controller.VisibleTargets[ply] = true
+
+                    if dist < distance then
+                        closest = ply
+                        distance = dist
+                    end
                 end
             end
         end
-    elseif controller.ForgetTarget < CurTime() and controller:CanSee(controller.Target) then
-        controller.ForgetTarget = CurTime() + 2
+
+        if IsValid(closest) then
+            controller.Target = closest
+            controller.ForgetTarget = CurTime() + 2
+        end
+
+        controller.LastSearched = CurTime() + 0.1
     end
 
-    local dt = util.QuickTrace(bot:EyePos(), bot:GetForward() * 45, bot)
+    -- dodge/strafe every so often like in timesplitters
+    if !controller.LastDodge or controller.LastDodge < CurTime() then
+        if IsValid(controller.Target) and math.random(100) <= 30 then
+            controller.DodgeAngle = math.random(2)
+            controller.DodgeTime = CurTime() + math.Rand(1, 2)
+        end
 
-    if IsValid(dt.Entity) and dt.Entity:GetClass() == "prop_door_rotating" then
-        dt.Entity:Fire("OpenAwayFrom", bot, 0)
+        controller.LastDodge = CurTime() + math.Rand(1, 2)
     end
 
+    if controller.DodgeTime and controller.DodgeTime > CurTime() then
+        mv:SetSideSpeed(controller.DodgeAngle == 1 and -2000 or 2000)
+    end
+
+    -- forget targets if we can't see them
+    if controller.ForgetTarget < CurTime() then
+        if IsValid(controller.Target) and util.QuickTrace(bot:EyePos(), controller.Target:WorldSpaceCenter() - bot:EyePos(), bot).Entity == controller.Target then
+            controller.ForgetTarget = CurTime() + 2
+        else
+            controller.Target = nil
+            controller.LastSearched = CurTime()
+        end
+    end
+
+    -- open doors
+    if !controller.LastDoorTrace or controller.LastDoorTrace < CurTime() then
+        local dt = util.QuickTrace(bot:EyePos(), bot:GetForward() * 45, bot)
+
+        if IsValid(dt.Entity) and dt.Entity:GetClass() == "prop_door_rotating" then
+            dt.Entity:Fire("OpenAwayFrom", bot, 0)
+        end
+
+        controller.LastDoorTrace = CurTime() + 0.25
+    end
+
+    -- patrol around the map if we don't have a target, otherwise try to back up if they are close
     if !IsValid(controller.Target) and (!controller.PosGen or bot:GetPos():DistToSqr(controller.PosGen) < 1000 or controller.LastSegmented < CurTime()) then
         -- find a random spot on the map, and in 10 seconds do it again!
         controller.PosGen = controller:FindSpot("random", {radius = 12500})
@@ -410,53 +473,130 @@ function LeadBot.PlayerMove(bot, cmd, mv)
         local distance = controller.Target:GetPos():DistToSqr(bot:GetPos())
         controller.PosGen = controller.Target:GetPos()
 
-        -- back up if the target is really close
-        -- TODO: find a random spot rather than trying to back up into what could just be a wall
-        -- something like controller.PosGen = controller:FindSpot("random", {pos = bot:GetPos() - bot:GetForward() * 350, radius = 1000})?
-        if distance <= 90000 then
-            mv:SetForwardSpeed(-1200)
+        -- very randomly back up if target is close
+        if distance <= (controller.RetreatDistance or 90000) and math.random(100) <= 15 then
+            controller.RetreatTime = CurTime() + math.Rand(1, 1.5)
+            controller.RetreatAngle = math.random(-1000, 1000)
+            controller.RetreatDistance = math.random(30000, 90000)
+            local mins, maxs = bot:GetHull()
+
+            local pos = util.TraceHull({
+                start = bot:GetPos(),
+                endpos = bot:GetPos() + Angle(0, bot:EyeAngles().y, 0):Forward() * -600 + Angle(0, bot:EyeAngles().y, 0):Right() * controller.RetreatAngle,
+                mins = mins,
+                maxs = maxs,
+                mask = MASK_PLAYERSOLID,
+                filter = bot
+            }).HitPos
+
+            local tr = util.TraceHull({
+                start = pos,
+                endpos = pos,
+                mins = mins,
+                maxs = maxs,
+                mask = MASK_PLAYERSOLID,
+                filter = nil
+            })
+
+            controller.RetreatPos = !tr.StartSolid and !tr.AllSolid and !tr.HitWorld and !tr.Hit and pos
+        end
+
+        if controller.RetreatTime and controller.RetreatTime > CurTime() then
+            -- while findspot is really cool, it only finds the same spots on big maps every time
+            -- controller.PosGen = controller:FindSpot("random", {pos = util.QuickTrace(bot:GetPos(), Angle(0, bot:EyeAngles().y, 0):Forward() * -600 + Angle(0, bot:EyeAngles().y, 0):Right() * 150, bot).HitPos, radius = 300})
+            --[[mv:SetForwardSpeed(-2000)
+            mv:SetSideSpeed(controller.RetreatAngle)]]
+
+            if controller.RetreatPos then
+                controller.PosGen = controller.RetreatPos
+            else
+                mv:SetForwardSpeed(-2000)
+                mv:SetSideSpeed(controller.RetreatAngle)
+                controller.PosGen = controller.Target:GetPos()
+            end
+        elseif distance <= 30000 then
+            mv:SetForwardSpeed(-2000)
         end
     end
 
-    -- movement also has a similar issue, but it's more severe...
-    if !controller.P then
-        return
-    end
-
-    local segments = controller.P:GetAllSegments()
-
+    -- if we cannot compute, just stop
+    if !controller.P then return end
+    local segments = controller.segments or controller.P:GetAllSegments()
+    // controller.Segments = controller.Segments or controller.P:GetAllSegments()
     if !segments then return end
 
-    local cur_segment = controller.cur_segment
-    local curgoal = segments[cur_segment]
+    local segs2 = {}
+    
+    for _, seg in ipairs(segments) do
+        debugoverlay.Text(seg.pos, _, 0.1, false)
+        segs2[_] = seg.pos
+    end
 
-    -- got nowhere to go, why keep moving?
+    /*local realsegs = {}
+
+    for _, seg in ipairs(segs2) do
+        table.insert(realsegs, seg)
+        if !segs2[_ + 2] or !segs2[_ - 2] then continue end
+        table.insert(realsegs, math.BSplinePoint(0.75, {segs2[_ - 2] and segs2[_ - 2], segs2[_ - 1], segs2[_ + 1], segs2[_ + 2]}, 1))
+    end
+
+    for _, seg in ipairs(realsegs) do
+        debugoverlay.Text(seg, "!" .. _, 0.1, false)
+        // segs2[_] = seg.pos
+        segments[_] = {
+            pos = seg,
+            type = 0,
+            area = navmesh.GetNavArea(seg, 0)
+        }
+    end
+
+    debugoverlay.Text(math.BSplinePoint(0.5, {segs2[1], segs2[1], segs2[2], segs2[2]}, 1), "TEST")*/
+
+    local cur_segment = controller.cur_segment
+    debugoverlay.Text(bot:EyePos() + VectorRand(), cur_segment, 0.1, false)
+    local curgoal = segments[cur_segment]
+    local difficulty = bot:LBGetDifficulty()
+
+    -- setup interpolation values so we don't snap to targets
+    local lerp = FrameTime() * math.Rand(Lerp(difficulty, 5, 6), Lerp(difficulty, 7, 8))
+    local lerpc = FrameTime() * 5
+
+    if !LeadBot.LerpAim then
+        lerp = 1
+        lerpc = 1
+    end
+
+    -- stop if we have nowhere to go
     if !curgoal then
         mv:SetForwardSpeed(0)
+
+        -- make sure we still aim at our target
+        if IsValid(controller.Target) then
+            local ang = LerpAngle(lerp, bot:EyeAngles(), (controller.Target:WorldSpaceCenter() - bot:GetShootPos()):Angle())
+            bot:SetEyeAngles(Angle(ang.p + math.sin(CurTime() * 4) * 0.25, ang.y + math.sin(CurTime() * 2) * 0.5, 0))
+        end
+
         return
     end
 
-    -- think every step of the way!
+    -- go to the next segment of our path if we are close to our current segment
     if segments[cur_segment + 1] and Vector(bot:GetPos().x, bot:GetPos().y, 0):DistToSqr(Vector(curgoal.pos.x, curgoal.pos.y)) < 100 then
         controller.cur_segment = controller.cur_segment + 1
         curgoal = segments[controller.cur_segment]
     end
 
     local goalpos = curgoal.pos
-
-    -- waaay too slow during gamplay
-    --[[if bot:GetVelocity():Length2DSqr() <= 225 and controller.NextCenter == 0 and controller.NextCenter < CurTime() then
-        controller.NextCenter = CurTime() + math.Rand(0.5, 0.65)
+    local i = 1
+    for _, tab in ipairs(segments) do
+        if _ > 2 and i <= 5 and util.QuickTrace(bot:EyePos(), tab.pos - bot:EyePos(), bot).HitPos:DistToSqr(tab.pos) <= 1 and tab.pos.z - bot:GetPos().z < 8 then
+            goalpos = tab.pos
+            i = i + 1
+        end
     end
 
-    if controller.NextCenter ~= 0 and controller.NextCenter < CurTime() then
-        if bot:GetVelocity():Length2DSqr() <= 225 then
-            controller.strafeAngle = ((controller.strafeAngle == 1 and 2) or 1)
-        end
+    debugoverlay.Text(goalpos, "GOAL", 1, false)
 
-        controller.NextCenter = 0
-    end]]
-
+    -- make sure we don't get stuck on corners by strafing if we aren't moving
     if bot:GetVelocity():Length2DSqr() <= 225 then
         if controller.NextCenter < CurTime() then
             controller.strafeAngle = ((controller.strafeAngle == 1 and 2) or 1)
@@ -479,45 +619,72 @@ function LeadBot.PlayerMove(bot, cmd, mv)
         end
     end
 
-    -- jump
+    -- jump if the navmesh has a jump
     if controller.NextJump ~= 0 and curgoal.type > 1 and controller.NextJump < CurTime() then
         controller.NextJump = 0
     end
 
-    -- duck
+    -- duck if navmesh requires ducking
     if curgoal.area:GetAttributes() == NAV_MESH_CROUCH then
         controller.NextDuck = CurTime() + 0.1
     end
 
+    -- tell the ai our goal position
     controller.goalPos = goalpos
 
+    -- draw path if developer is enabled
     if GetConVar("developer"):GetBool() then
         controller.P:Draw()
     end
 
-    -- eyesight
-    local lerp = FrameTime() * math.random(8, 10)
-    local lerpc = FrameTime() * 8
-
-    if !LeadBot.LerpAim then
-        lerp = 1
-        lerpc = 1
-    end
-
     local mva = ((goalpos + bot:GetCurrentViewOffset()) - bot:GetShootPos()):Angle()
+    local projectile = IsValid(bot:GetActiveWeapon()) and bot:GetActiveWeapon():GetClass() == "weapon_crossbow"
 
+    -- move our legs where we need to go while we can look directly at target
     mv:SetMoveAngles(mva)
 
+    debugoverlay.Text(bot:EyePos() + Vector(0, 0, 8) + VectorRand() * 8, string.sub((SysTime() - time) * 100, 1, 4), 1.25, false)
+
+    if (SysTime() - time) * 100 > 0.1 then
+        debugoverlay.Box(bot:GetPos(), Vector(-16, -16, 0), Vector(16, 16, 72), 0.1, Color(255, 0, 0, 0))
+
+        for i = 1, 24 do
+            debugoverlay.Text(bot:EyePos() + VectorRand() * 64, SysTime() - time, 0.1, false)
+        end
+    end
+
+    -- look at our target, or our path
     if IsValid(controller.Target) then
-        bot:SetEyeAngles(LerpAngle(lerp, bot:EyeAngles(), (controller.Target:EyePos() - bot:GetShootPos()):Angle()))
+        local ang = LerpAngle(lerp, bot:EyeAngles(), (controller.Target:WorldSpaceCenter() + (controller.Target:GetVelocity() * (projectile and math.Rand(0.2, 0.3) or Lerp(difficulty, math.Rand(-0.1, 0.1), math.Rand(-0.01, 0.01)))) - bot:GetShootPos()):Angle())
+        bot:SetEyeAngles(Angle(ang.p + math.sin(CurTime() * 4) * Lerp(difficulty, 0.075, 0.025), ang.y + math.sin(CurTime() * 2) * Lerp(difficulty, 0.25, 0.012), 0) + bot:GetViewPunchAngles() * Lerp(difficulty, 0.3, 0.1))
         return
     else
         if controller.LookAtTime > CurTime() then
             local ang = LerpAngle(lerpc, bot:EyeAngles(), controller.LookAt)
             bot:SetEyeAngles(Angle(ang.p, ang.y, 0))
         else
-            local ang = LerpAngle(lerpc, bot:EyeAngles(), mva)
-            bot:SetEyeAngles(Angle(ang.p, ang.y, 0))
+            -- look ahead to make sure we don't snap our view every segment
+            local pos = controller.EyePosition or curgoal.pos -- segments[2] and segments[2].pos or segments[1].pos
+            if !controller.LastEyePosition or controller.LastEyePosition < CurTime() then
+                local i = 1
+                for _, tab in ipairs(segments) do
+                    if i <= 5 and util.QuickTrace(bot:EyePos(), tab.pos - bot:EyePos(), bot).HitPos:DistToSqr(tab.pos) <= 150 then
+                        controller.EyePosition = tab.pos
+                        i = i + 1
+                    end
+                end
+                controller.LastEyePosition = CurTime() + 0.25
+            end
+            --[[local i = 1
+            for _, tab in ipairs(segments) do
+                if i <= 5 and util.QuickTrace(bot:EyePos(), tab.pos - bot:EyePos(), bot).HitPos:DistToSqr(tab.pos) <= 150 then
+                    pos = tab.pos
+                    i = i + 1
+                end
+            end]]
+            local ang = (pos + bot:GetCurrentViewOffset() - bot:EyePos()):Angle()
+            ang = LerpAngle(lerpc, bot:EyeAngles(), ang)
+            bot:SetEyeAngles(Angle(ang.p + math.sin(CurTime() * 4) * 0.05, ang.y + math.sin(CurTime() * 2) * 0.1, 0))
         end
     end
 end
@@ -609,6 +776,20 @@ function player_meta.LBGetColor(self, weapon)
     end
 end
 
+function player_meta.LBGetDifficulty(self)
+    if self.LeadBot_Config then
+        return self.LeadBot_Config[5] / 3
+    else
+        return 0
+    end
+end
+
+LeadBot.Convars = {}
+LeadBot.Convars["cl_hl2mp_playermodel"] = function(self)
+    self.Combine = self.Combine or math.random(2)
+    return self.Combine ~= 1 and table.Random(GAMEMODE.Models_Rebel) or table.Random(GAMEMODE.Models_Combine)
+end
+
 function player_meta.GetInfo(self, convar)
     if self:IsBot() and self:IsLBot() then
         if convar == "cl_playermodel" then
@@ -617,6 +798,8 @@ function player_meta.GetInfo(self, convar)
             return self:LBGetColor() --self.LeadBot_Config[2]
         elseif convar == "cl_weaponcolor" then
             return self:LBGetColor(true) --self.LeadBot_Config[3]
+        elseif LeadBot.Convars[convar] then
+            return LeadBot.Convars[convar](self)
         else
             return ""
         end

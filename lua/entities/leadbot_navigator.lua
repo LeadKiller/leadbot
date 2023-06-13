@@ -7,8 +7,8 @@ function ENT:Initialize()
 	if CLIENT then return end
 
 	self:SetModel("models/player.mdl")
-	self:SetNoDraw(!GetConVar("developer"):GetBool())
 	self:SetSolid(SOLID_NONE)
+	self:SetNoDraw(true)
 
 	local fov_convar = GetConVar("leadbot_fov")
 
@@ -19,6 +19,7 @@ function ENT:Initialize()
 	self.cur_segment = 2
 	self.Target = nil
 	self.LastSegmented = 0
+	self.LastSearched = 0
 	self.ForgetTarget = 0
 	self.NextCenter = 0
 	self.LookAt = Angle(0, 0, 0)
@@ -26,10 +27,15 @@ function ENT:Initialize()
 	self.goalPos = Vector(0, 0, 0)
 	self.strafeAngle = 0
 	self.nextStuckJump = 0
+	self.Difficulty = math.Rand(0.75, 1.5)
 
 	if LeadBot.AddControllerOverride then
 		LeadBot.AddControllerOverride(self)
 	end
+end
+
+local function cansee(self, pos1, pos2)
+	return util.QuickTrace(pos1, pos2 - pos1, self:GetOwner()).HitPos:DistToSqr(pos2) < 100
 end
 
 function ENT:ChasePos()
@@ -43,6 +49,29 @@ function ENT:ChasePos()
 	while self.P:IsValid() do
 		if self.PosGen then
 			self.P:Compute(self, self.PosGen)
+			self.segments = self.P:GetAllSegments()
+
+			local segs = {}
+			for _, seg in ipairs(self.segments) do
+				local add = false
+
+				// ErrorNoHalt("GO")
+
+				if !self.segments[_ + 1] or !self.segments[_ - 1] then
+					add = true
+				else
+					if cansee(self, seg.pos, self.segments[_ + 1].pos) and cansee(self, seg.pos, self.segments[_ - 1].pos) then
+						// print("SEEEEEEEE")
+						// ErrorNoHalt("SEE")
+					else
+						add = true
+					end
+				end
+
+				if add then
+					table.insert(segs, add)
+				end
+			end
 			self.cur_segment = 2
 		end
 
@@ -67,8 +96,9 @@ function ENT:Health()
 	return nil
 end
 
--- remade this in lua so we can finally ignore the controller's bot
--- for some reason it's not really possible to overwrite IsAbleToSee
+function ENT:Draw()
+end
+
 local function PointWithinViewAngle(pos, targetpos, lookdir, fov)
 	pos = targetpos - pos
 	local diff = lookdir:Dot(pos)
@@ -81,9 +111,7 @@ function ENT:InFOV(pos, fov)
 	local owner = self:GetOwner()
 
 	if IsEntity(pos) then
-		-- we must check eyepos and worldspacecenter
-		-- maybe in the future add more points
-
+		-- TODO: check corners of hull instead
 		if PointWithinViewAngle(owner:EyePos(), pos:WorldSpaceCenter(), owner:GetAimVector(), fov) then
 			return true
 		end
@@ -100,9 +128,6 @@ function ENT:CanSee(ply, fov)
 	end
 
 	-- TODO: check fog farz and compare with distance
-
-	-- half fov or something
-	-- probably should move this to a variable
 	fov = fov or true
 
 	if fov and !self:InFOV(ply, math.cos(0.5 * (self:GetFOV() or 90) * math.pi / 180)) then

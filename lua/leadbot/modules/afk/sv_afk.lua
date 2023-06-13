@@ -5,6 +5,7 @@ local meta = FindMetaTable("Player")
 local oldFunc = meta.IsBot
 
 util.AddNetworkString("LeadBot_AFK_Off")
+util.AddNetworkString("LeadBot_AFK_Keys")
 
 net.Receive("LeadBot_AFK_Off", function(_, ply)
     LeadBot.Botize(ply, false)
@@ -12,6 +13,15 @@ net.Receive("LeadBot_AFK_Off", function(_, ply)
 end)
 
 hook.Add("PlayerTick", "LeadBot_AFK", function(ply)
+    -- network keys so clientside animations for custom sweps like sprinting work
+    if ply:GetNWBool("LeadBot_AFK") and (!ply.LastAFKSend or ply.LastAFKSend < CurTime()) then
+        net.Start("LeadBot_AFK_Keys")
+        net.WriteInt(ply.LeadBot_Keys or 0, 32)
+        net.WriteEntity(ply.ControllerBot.Target or game.GetWorld())
+        net.Send(ply)
+        ply.LastAFKSend = CurTime() + 0.25
+    end
+
     if !time:GetBool() then return end
 
     ply.LastAFKCheck = ply.LastAFKCheck or CurTime() + time:GetFloat()
@@ -47,6 +57,7 @@ function LeadBot.Botize(ply, togg)
         ply.BotSkin = ply:GetSkin()
         ply.BotModel = ply:GetModel()
         ply.BotWColor = ply:GetWeaponColor()
+        ply.BotDifficulty = math.random(2)
         ply.ControllerBot = ents.Create("leadbot_navigator")
         ply.ControllerBot:Spawn()
         ply.ControllerBot:SetOwner(ply)
@@ -61,6 +72,7 @@ function LeadBot.Botize(ply, togg)
         ply.LeadBot_Config[2] = ply.BotColor
         ply.LeadBot_Config[3] = ply.BotWColor
         ply.LeadBot_Config[4] = ply.BotStrategy
+        ply.LeadBot_Config[5] = ply.BotDifficulty
     end
 end
 
